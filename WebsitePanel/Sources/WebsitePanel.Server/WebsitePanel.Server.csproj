@@ -293,6 +293,7 @@
     <Content Include="VirtualizationServerForPrivateCloud.asmx" />
     <Content Include="bin\WebsitePanel.Server.dll.config" />
     <Content Include="bin\WebsitePanel.Server.WPIService.exe.config" />
+    <None Include="Properties\PublishProfiles\hosting2014.pubxml" />
     <None Include="Web.config">
       <SubType>Designer</SubType>
     </None>
