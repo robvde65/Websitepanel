@@ -14,28 +14,36 @@ namespace WebsitePanel.EnterpriseServer.Extensions
         /// <summary>
         /// Log properties of the object which have [LogProperty] or [LogParentPropery] attributes
         /// </summary>
-        public static void WriteObject<T>(T obj) 
+        public static void WriteObject<T>(T obj)
             where T : class
         {
             if (obj == null)
                 return;
 
-            // Log Parent Properties
-            var logPropertyAttributes = GetAttributes<T, LogParentPropertyAttribute>();
-            foreach (var logPropertyAttribute in logPropertyAttributes)
+            try
             {
-                TaskManager.Write(logPropertyAttribute.GetLogString(obj));
-            }
-
-            // Log Properties
-            var properties = typeof (T).GetProperties().Where(prop => prop.IsDefined(typeof (LogPropertyAttribute), false));
-            foreach (var property in properties)
-            {
-                var attributes = GetAttributes<LogPropertyAttribute>(property);
-                foreach (var logPropertyAttribute in attributes)
+                // Log Parent Properties Attribute
+                var logPropertyAttributes = GetAttributes<T, LogParentPropertyAttribute>();
+                foreach (var logPropertyAttribute in logPropertyAttributes)
                 {
-                    TaskManager.Write(logPropertyAttribute.GetLogString(obj, property));
+                    TaskManager.Write(logPropertyAttribute.GetLogString(obj));
                 }
+
+                // Log Properties Attribute
+                var properties =
+                    typeof (T).GetProperties().Where(prop => prop.IsDefined(typeof (LogPropertyAttribute), false));
+                foreach (var property in properties)
+                {
+                    var attributes = GetAttributes<LogPropertyAttribute>(property);
+                    foreach (var logPropertyAttribute in attributes)
+                    {
+                        TaskManager.Write(logPropertyAttribute.GetLogString(obj, property));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
             }
         }
 
@@ -53,15 +61,25 @@ namespace WebsitePanel.EnterpriseServer.Extensions
         /// <summary>
         /// Log a value of the property from expression parameter
         /// </summary>
-        public static T LogProperty<T, TU>(this T obj, Expression<Func<T, TU>> expression, string nameInLog = null) 
+        public static T LogProperty<T, TU>(this T obj, Expression<Func<T, TU>> expression, string nameInLog = null)
             where T : class
         {
-            var property = ObjectUtils.GetProperty(obj, expression);
+            try
+            {
+                var property = ObjectUtils.GetProperty(obj, expression);
 
-            var propertyName = string.IsNullOrEmpty(nameInLog) ? LogExtensionHelper.DecorateName(property.Name) : nameInLog;
-            var propertyValue = LogExtensionHelper.GetString(property.GetValue(obj, null));
+                var propertyName = string.IsNullOrEmpty(nameInLog)
+                    ? LogExtensionHelper.DecorateName(property.Name)
+                    : nameInLog;
+                var propertyValue = LogExtensionHelper.GetString(property.GetValue(obj, null));
 
-            TaskManager.Write(LogExtensionHelper.CombineString(propertyName, propertyValue));
+                TaskManager.Write(LogExtensionHelper.CombineString(propertyName, propertyValue));
+
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
+            }
 
             return obj;
         }
@@ -69,28 +87,71 @@ namespace WebsitePanel.EnterpriseServer.Extensions
         /// <summary>
         /// Log a value of the property from expression parameter
         /// </summary>
-        public static void LogProperties<T, TU>(this T obj, params Expression<Func<T, TU>>[] expressions) 
+        public static void LogProperties<T, TU>(this T obj, params Expression<Func<T, TU>>[] expressions)
             where T : class
         {
-            foreach (var expression in expressions)
+            try
             {
-                LogProperty(obj, expression);
+                foreach (var expression in expressions)
+                {
+                    LogProperty(obj, expression);
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Log changed values of the all properties of the object
+        /// </summary>
+        public static void LogPropertiesIfChanged<T>(T oldObj, T newObj, bool withOld = true) where T : class
+        {
+            if (oldObj == null || newObj == null)
+                return;
+
+            try
+            {
+                foreach (var property in typeof (T).GetProperties())
+                {
+                    object newValue;
+                    try
+                    {
+                        newValue = property.GetValue(newObj, null);
+                    }
+                    catch (Exception ex)
+                    {
+                        TaskManager.Write("Can't get {0} property", property.Name);
+                        continue;
+                    }
+                    LogPropertyIfChanged(oldObj, property, newValue, withOld);
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
             }
         }
 
         /// <summary>
         /// Log a value of the property only when it is different from newValue parameter. Also the old value can be written.
         /// </summary>
-        public static T LogPropertyIfChanged<T, TU>(this T obj, Expression<Func<T, TU>> expression, object newValue, bool withOld = true) where T : class
+        public static T LogPropertyIfChanged<T, TU>(this T obj, Expression<Func<T, TU>> expression, object newValue,
+            bool withOld = true) where T : class
         {
-            var property = ObjectUtils.GetProperty(obj, expression);
+            if (obj == null || expression == null)
+                return obj;
 
-            var oldValue = property.GetValue(obj, null);
-
-            if (!oldValue.Equals(newValue))
+            try
             {
-                WriteChangedProperty(obj, property, LogExtensionHelper.GetString(oldValue),
-                    LogExtensionHelper.GetString(newValue), withOld);
+                var property = ObjectUtils.GetProperty(obj, expression);
+
+                return LogPropertyIfChanged(obj, property, newValue, withOld);
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
             }
 
             return obj;
@@ -103,15 +164,22 @@ namespace WebsitePanel.EnterpriseServer.Extensions
         /// <param name="prefix">Add the string before a variable name</param>
         public static void WriteVariables(object variablesObs, string prefix = "")
         {
-            if (variablesObs == null)
-                throw new ArgumentException();
-            
-            foreach (var property in variablesObs.GetType().GetProperties())
+            try
             {
-                var parameterName = LogExtensionHelper.DecorateName(property.Name);
-                var parameterValue = LogExtensionHelper.GetString(property.GetValue(variablesObs, null));
+                if (variablesObs == null)
+                    throw new ArgumentException("variablesObs"); 
+                
+                foreach (var property in variablesObs.GetType().GetProperties())
+                {
+                    var parameterName = LogExtensionHelper.DecorateName(property.Name);
+                    var parameterValue = LogExtensionHelper.GetString(property.GetValue(variablesObs, null));
 
-                TaskManager.Write(prefix + LogExtensionHelper.CombineString(parameterName, parameterValue));
+                    TaskManager.Write(prefix + LogExtensionHelper.CombineString(parameterName, parameterValue));
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
             }
         }
 
@@ -120,7 +188,14 @@ namespace WebsitePanel.EnterpriseServer.Extensions
         /// </summary>
         public static void WriteVariable(string name, string value)
         {
-            TaskManager.Write(LogExtensionHelper.CombineString(name, value));
+            try
+            {
+                TaskManager.Write(LogExtensionHelper.CombineString(name, value));
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
+            }
         }
 
         /// <summary>
@@ -129,7 +204,14 @@ namespace WebsitePanel.EnterpriseServer.Extensions
         /// <param name="itemName"></param>
         public static void SetItemName(string itemName)
         {
-            TaskManager.ItemName = itemName;
+            try
+            {
+                TaskManager.ItemName = itemName;
+            }
+            catch (Exception ex)
+            {
+                WriteException(ex);
+            }
         }
 
         #region Private methods
@@ -146,14 +228,53 @@ namespace WebsitePanel.EnterpriseServer.Extensions
             return (T[]) member.GetCustomAttributes(typeof (T), false);
         }
 
-        private static void WriteChangedProperty(object obj, PropertyInfo property, string oldValue, string newValue, bool withOld = true)
+        private static T LogPropertyIfChanged<T>(T obj, PropertyInfo property, object newValue, bool withOld = true)
+            where T : class
+        {
+            if (property == null)
+                return obj;
+
+            object oldValue;
+            try
+            {
+                oldValue = property.GetValue(obj, null);
+            }
+            catch (Exception ex)
+            {
+                TaskManager.Write("Cant get {0} property", property.Name);
+                return obj;
+            }
+
+            var oldValueStr = LogExtensionHelper.GetString(oldValue);
+            var newValueStr = LogExtensionHelper.GetString(newValue);
+
+            if (oldValue == null || newValue == null)
+            {
+                if (oldValue != newValue)
+                {
+                    WriteChangedProperty(obj, property, oldValueStr, newValueStr, withOld);
+                }
+            }
+            else if (!oldValueStr.Equals(newValueStr))
+            {
+                WriteChangedProperty(obj, property, oldValueStr, newValueStr, withOld);
+            }
+
+            return obj;
+        }
+
+        private static void WriteChangedProperty(object obj, PropertyInfo property, string oldValue, string newValue,
+            bool withOld = true)
         {
             var attributes = GetAttributes<LogPropertyAttribute>(property);
 
-            if (attributes.Length > 0)
+            if (attributes != null && attributes.Length > 0)
             {
                 foreach (var logPropertyAttribute in attributes)
                 {
+                    if (logPropertyAttribute == null)
+                        continue;
+                    
                     if (withOld)
                         TaskManager.Write(OLD_PREFIX + logPropertyAttribute.GetLogString(obj, property));
 
@@ -165,11 +286,16 @@ namespace WebsitePanel.EnterpriseServer.Extensions
                 var name = LogExtensionHelper.DecorateName(property.Name);
 
                 if (withOld)
-                    TaskManager.Write(OLD_PREFIX + LogExtensionHelper.CombineString(name, newValue));
+                    TaskManager.Write(OLD_PREFIX + LogExtensionHelper.CombineString(name, oldValue));
 
-                TaskManager.Write(NEW_PREFIX + LogExtensionHelper.CombineString(name, oldValue));
+                TaskManager.Write(NEW_PREFIX + LogExtensionHelper.CombineString(name, newValue));
             }
 
+        }
+
+        private static void WriteException(Exception ex)
+        {
+            TaskManager.WriteWarning("Extension Log Error: " + ex.Message + ex.StackTrace);
         }
 
         #endregion

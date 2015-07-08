@@ -40,6 +40,7 @@ using System.Web.UI.HtmlControls;
 using WebsitePanel.Portal.ProviderControls;
 using WebsitePanel.Providers.HostedSolution;
 using WebsitePanel.EnterpriseServer;
+using WebsitePanel.EnterpriseServer.Base.HostedSolution;
 using WebsitePanel.Providers.OS;
 
 namespace WebsitePanel.Portal.ExchangeServer
@@ -68,11 +69,9 @@ namespace WebsitePanel.Portal.ExchangeServer
 
                 if (organizationStats.AllocatedEnterpriseStorageSpace != -1)
                 {
-                    OrganizationStatistics tenantStats = ES.Services.Organizations.GetOrganizationStatistics(PanelRequest.ItemID);
-
-                    rangeFolderSize.MaximumValue = Math.Round((tenantStats.AllocatedEnterpriseStorageSpace - (decimal)tenantStats.UsedEnterpriseStorageSpace)/OneGb
+                    rangeFolderSize.MaximumValue = Math.Round((organizationStats.AllocatedEnterpriseStorageSpace - (decimal)organizationStats.UsedEnterpriseStorageSpace) / OneGb
                         + Utils.ParseDecimal(txtFolderSize.Text, 0), 2).ToString();
-                    rangeFolderSize.ErrorMessage = string.Format("The quota you�ve entered exceeds the available quota for tenant ({0}Gb)", rangeFolderSize.MaximumValue);
+                    rangeFolderSize.ErrorMessage = string.Format("The quota you've entered exceeds the available quota for organization ({0}Gb)", rangeFolderSize.MaximumValue);
                 }
             }
         }
@@ -114,9 +113,13 @@ namespace WebsitePanel.Portal.ExchangeServer
 
                 if (folder.StorageSpaceFolderId != null)
                 {
-                    uncPathRow.Visible = true;
+                    uncPathRow.Visible = edaRow.Visible = abeRow.Visible = true;
 
                     lblUncPath.Text = folder.UncPath;
+
+
+                    chkAbe.Checked = ES.Services.StorageSpaces.GetStorageSpaceFolderAbeStatus(folder.StorageSpaceFolderId.Value);
+                    chkEda.Checked = ES.Services.StorageSpaces.GetStorageSpaceFolderEncryptDataAccessStatus(folder.StorageSpaceFolderId.Value);
                 }
             }
             catch (Exception ex)
@@ -168,6 +171,11 @@ namespace WebsitePanel.Portal.ExchangeServer
                     false,
                     (int)(decimal.Parse(txtFolderSize.Text) * OneGb),
                     rbtnQuotaSoft.Checked ? QuotaType.Soft : QuotaType.Hard);
+
+                if (edaRow.Visible && abeRow.Visible)
+                {
+                   ES.Services.EnterpriseStorage.SetEsFolderShareSettings(PanelRequest.ItemID, PanelRequest.FolderID, chkAbe.Checked, chkEda.Checked);
+                }
 
                 Response.Redirect(EditUrl("SpaceID", PanelSecurity.PackageId.ToString(), "enterprisestorage_folders",
                         "ItemID=" + PanelRequest.ItemID));

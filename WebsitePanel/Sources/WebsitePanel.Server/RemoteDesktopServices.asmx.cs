@@ -681,12 +681,12 @@ namespace WebsitePanel.Server
         }
 
         [WebMethod, SoapHeader("settings")]
-        public void ShadowSession(string sessionId, bool control)
+        public void ShadowSession(string sessionId, string fqdName, bool control)
         {
             try
             {
                 Log.WriteStart("'{0}' ShadowSession", ProviderSettings.ProviderName);
-                RDSProvider.ShadowSession(sessionId, control);
+                RDSProvider.ShadowSession(sessionId, fqdName, control);
                 Log.WriteEnd("'{0}' ShadowSession", ProviderSettings.ProviderName);
             }
             catch (Exception ex)
@@ -740,6 +740,22 @@ namespace WebsitePanel.Server
             catch (Exception ex)
             {
                 Log.WriteError(String.Format("'{0}' ImportCollection", ProviderSettings.ProviderName), ex);
+                throw;
+            }
+        }
+
+        [WebMethod, SoapHeader("settings")]
+        public void SendMessage(List<RdsMessageRecipient> recipients, string text)
+        {
+            try
+            {
+                Log.WriteStart("'{0}' SendMessage", ProviderSettings.ProviderName);
+                RDSProvider.SendMessage(recipients, text);
+                Log.WriteEnd("'{0}' SendMessage", ProviderSettings.ProviderName);
+            }
+            catch (Exception ex)
+            {
+                Log.WriteError(String.Format("'{0}' SendMessage", ProviderSettings.ProviderName), ex);
                 throw;
             }
         }

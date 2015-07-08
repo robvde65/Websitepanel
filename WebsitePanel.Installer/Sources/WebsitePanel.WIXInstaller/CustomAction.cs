@@ -26,6 +26,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE)  ARISING  IN  ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -35,8 +36,10 @@ using System.Diagnostics;
 using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.ServiceProcess;
 using System.Text;
 using System.Xml;
 
@@ -52,11 +55,45 @@ namespace WebsitePanel.WIXInstaller
     public class CustomActions
     {
         public static List<string> SysDb = new List<string> { "tempdb", "master", "model", "msdb" };
-        public const string CustomDataDelimiter = "-=del=-";
         public const string SQL_AUTH_WINDOWS = "Windows Authentication";
         public const string SQL_AUTH_SERVER = "SQL Server Authentication";
 
         #region CustomActions
+        [CustomAction]
+        public static ActionResult OnScpa(Session Ctx)
+        {
+            PopUpDebugger();
+            Func<Hashtable, string, string> GetParam = (s, x) => Utils.GetStringSetupParameter(s, x);
+            Ctx.AttachToSetupLog();
+            Log.WriteStart("OnScpa");
+
+            try
+            {
+                var Hash = Ctx.CustomActionData.ToNonGenericDictionary() as Hashtable;
+                var Scpa = new WebsitePanel.Setup.Actions.ConfigureStandaloneServerAction();
+                Scpa.ServerSetup = new SetupVariables { };
+                Scpa.EnterpriseServerSetup = new SetupVariables { };
+                Scpa.PortalSetup = new SetupVariables { };
+                Scpa.EnterpriseServerSetup.ServerAdminPassword = GetParam(Hash, "ServerAdminPassword");
+                Scpa.EnterpriseServerSetup.PeerAdminPassword = Scpa.EnterpriseServerSetup.ServerAdminPassword;
+                Scpa.PortalSetup.InstallerFolder = GetParam(Hash, "InstallerFolder");
+                Scpa.PortalSetup.ComponentId = WiXSetup.GetComponentID(Scpa.PortalSetup);
+                AppConfig.LoadConfiguration(new ExeConfigurationFileMap { ExeConfigFilename = WiXSetup.GetFullConfigPath(Scpa.PortalSetup) });
+                Scpa.PortalSetup.EnterpriseServerURL = GetParam(Hash, "EnterpriseServerUrl");
+                Scpa.PortalSetup.WebSiteIP = GetParam(Hash, "PortalWebSiteIP");
+                Scpa.ServerSetup.WebSiteIP = GetParam(Hash, "ServerWebSiteIP");
+                Scpa.ServerSetup.WebSitePort = GetParam(Hash, "ServerWebSitePort");
+                Scpa.ServerSetup.ServerPassword = GetParam(Hash, "ServerPassword");
+                var Make = Scpa as WebsitePanel.Setup.Actions.IInstallAction;
+                Make.Run(null);
+            }
+            catch (Exception ex)
+            {
+                Log.WriteError(ex.ToString());
+            }
+            Log.WriteEnd("OnScpa");
+            return ActionResult.Success;
+        }
         [CustomAction]
         public static ActionResult OnServerPrepare(Session Ctx)
         {
@@ -88,6 +125,47 @@ namespace WebsitePanel.WIXInstaller
             Log.WriteStart("OnPortalPrepare");
             GetPrepareScript(Ctx).Run();
             Log.WriteEnd("OnPortalPrepare");
+            return ActionResult.Success;
+        }
+        [CustomAction]
+        public static ActionResult OnSchedulerPrepare(Session Ctx)
+        {
+            PopUpDebugger();
+            Ctx.AttachToSetupLog();
+            Log.WriteStart("OnSchedulerPrepare");
+            try
+            {
+                var ServiceName = Global.Parameters.SchedulerServiceName;
+                var ServiceFile = string.Empty;
+                ManagementClass WmiService = new ManagementClass("Win32_Service");
+                foreach (var MObj in WmiService.GetInstances())
+                {
+                    if (MObj.GetPropertyValue("Name").ToString().Equals(ServiceName, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        ServiceFile = MObj.GetPropertyValue("PathName").ToString();
+                        break;
+                    }
+                }
+                if (!string.IsNullOrWhiteSpace(ServiceName) && !string.IsNullOrWhiteSpace(ServiceFile))
+                {
+                    var CtxVars = new SetupVariables() { ServiceName = ServiceName, ServiceFile = ServiceFile };
+                    var Script = new BackupSchedulerScript(CtxVars);
+                    Script.Actions.Add(new InstallAction(ActionTypes.UnregisterWindowsService)
+                    {
+                        Name = ServiceName,
+                        Path = ServiceFile,
+                        Description = "Removing Windows service...",
+                        Log = string.Format("- Remove {0} Windows service", ServiceName)
+                    });
+                    Script.Context.ServiceName = Global.Parameters.SchedulerServiceName;
+                    Script.Run();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.WriteError(ex.ToString());
+            }
+            Log.WriteEnd("OnSchedulerPrepare");
             return ActionResult.Success;
         }
         [CustomAction]
@@ -268,6 +346,8 @@ namespace WebsitePanel.WIXInstaller
                             }
                             ConnStr = new SqlConnectionStringBuilder(CtxVars.ConnectionString);
                             SetProperty(Ctx, "DB_DATABASE", ConnStr.InitialCatalog);
+                            SetProperty(Ctx, "PI_ESERVER_CONN_STR", ConnStr.ToString());
+                            SetProperty(Ctx, "PI_ESERVER_CRYPTO_KEY", CtxVars.CryptoKey);
 
                             try
                             {
@@ -318,6 +398,45 @@ namespace WebsitePanel.WIXInstaller
                             bool HavePool = Tool.AppPoolExists(CtxVars.ApplicationPool);
 
                             Ctx["COMPFOUND_PORTAL"] = (HaveAccount && HavePool) ? YesNo.Yes : YesNo.No;
+                        }
+                        CtxVars.ComponentId = WiXSetup.GetComponentID(CfgPath, Global.Scheduler.ComponentCode);
+                        var HaveComponentId = !string.IsNullOrWhiteSpace(CtxVars.ComponentId);
+                        var HaveSchedulerService = ServiceController.GetServices().Any(x => x.DisplayName.Equals(Global.Parameters.SchedulerServiceName, StringComparison.CurrentCultureIgnoreCase));
+                        var EServerConnStr = Ctx["PI_ESERVER_CONN_STR"];
+                        var HaveConn = !string.IsNullOrWhiteSpace(EServerConnStr);
+                        if (HaveComponentId || HaveSchedulerService || HaveConn)
+                        {
+                            Ctx["COMPFOUND_SCHEDULER"] = YesNo.No;
+                            try
+                            {
+                                SqlConnectionStringBuilder ConnInfo = null;
+                                if (HaveComponentId)
+                                {
+                                    AppConfig.LoadComponentSettings(CtxVars);
+                                    VersionGuard(Ctx, CtxVars);
+                                    SetProperty(Ctx, "COMPFOUND_SCHEDULER_ID", CtxVars.ComponentId);
+                                    SetProperty(Ctx, "COMPFOUND_SCHEDULER_MAIN_CFG", CfgPath);
+                                    SetProperty(Ctx, "PI_SCHEDULER_CRYPTO_KEY", CtxVars.CryptoKey);
+                                    ConnInfo = new SqlConnectionStringBuilder(CtxVars.ConnectionString);                                    
+                                }
+                                else if (HaveConn)
+                                {                                    
+                                    SetProperty(Ctx, "PI_SCHEDULER_CRYPTO_KEY", Ctx["PI_ESERVER_CRYPTO_KEY"]);
+                                    ConnInfo = new SqlConnectionStringBuilder(EServerConnStr);
+                                }
+                                if(ConnInfo != null)
+                                {
+                                    SetProperty(Ctx, "PI_SCHEDULER_DB_SERVER", ConnInfo.DataSource);
+                                    SetProperty(Ctx, "PI_SCHEDULER_DB_DATABASE", ConnInfo.InitialCatalog);
+                                    SetProperty(Ctx, "PI_SCHEDULER_DB_LOGIN", ConnInfo.UserID);
+                                    SetProperty(Ctx, "PI_SCHEDULER_DB_PASSWORD", ConnInfo.Password);
+                                }
+                                Ctx["COMPFOUND_SCHEDULER"] = HaveSchedulerService? YesNo.Yes : YesNo.No;
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.WriteError("Detection of existing Scheduler Service failed.", ex);
+                            }                                
                         }
                     }
                     catch (InvalidOperationException ioex)
@@ -468,6 +587,12 @@ namespace WebsitePanel.WIXInstaller
             PopUpDebugger();
             return ProcessInstall(session, WiXInstallType.InstallPortal);
         }
+        [CustomAction]
+        public static ActionResult OnSchedulerInstall(Session session)
+        {
+            PopUpDebugger();
+            return ProcessInstall(session, WiXInstallType.InstallScheduler);
+        }
         // Remove.
         [CustomAction]
         public static ActionResult OnServerRemove(Session session)
@@ -486,6 +611,12 @@ namespace WebsitePanel.WIXInstaller
         {
             PopUpDebugger();
             return ProcessInstall(session, WiXInstallType.RemovePortal);
+        }
+        [CustomAction]
+        public static ActionResult OnSchedulerRemove(Session session)
+        {
+            PopUpDebugger();
+            return ProcessInstall(session, WiXInstallType.RemoveScheduler);
         }
         // Other.
         [CustomAction]
@@ -554,6 +685,18 @@ namespace WebsitePanel.WIXInstaller
             string Msg;
             ValidationReset(Ctx);
             Valid = ValidateDbNameUI(Ctx, out Msg);
+            ValidationMsg(Ctx, Msg);
+            ValidationStatus(Ctx, Valid);
+            return ActionResult.Success;
+        }
+        [CustomAction]
+        public static ActionResult SchedulerValidateUI(Session session)
+        {
+            var Ctx = session;
+            bool Valid = true;
+            string Msg;
+            ValidationReset(Ctx);
+            Valid = ValidateCryptoKeyUI(Ctx, out Msg);
             ValidationMsg(Ctx, Msg);
             ValidationStatus(Ctx, Valid);
             return ActionResult.Success;
@@ -676,6 +819,27 @@ namespace WebsitePanel.WIXInstaller
             return ActionResult.Success;
         }
         [CustomAction]
+        public static ActionResult CheckConnectionSchedulerUI(Session Ctx)
+        {
+            PopUpDebugger();
+            Ctx.AttachToSetupLog();
+            Log.WriteStart("CheckConnectionSchedulerUI");
+            var Result = default(bool);
+            var Msg = default(string);
+            var DbServer = Ctx["PI_SCHEDULER_DB_SERVER"];
+            var DbUser = Ctx["PI_SCHEDULER_DB_LOGIN"];
+            var DbPass = Ctx["PI_SCHEDULER_DB_PASSWORD"];
+            var DbBase = Ctx["PI_SCHEDULER_DB_DATABASE"];
+            if (new string[] { DbServer, DbUser, DbPass, DbBase }.Any(x => string.IsNullOrWhiteSpace(x)))
+                Msg = "Please check all fields again.";
+            else
+                Result = Adapter.CheckSql(new SetupVariables { InstallConnectionString = GetConnectionString(DbServer, DbBase, DbUser, DbPass) }, out Msg) == CheckStatuses.Success;
+            Ctx["DB_CONN_CORRECT"] = Result ? YesNo.Yes : YesNo.No;
+            Ctx["DB_CONN_MSG"] = string.Format(Result ? "Success. {0}" : "Error. {0}", Msg);
+            Log.WriteEnd("CheckConnectionSchedulerUI");
+            return ActionResult.Success;
+        }
+        [CustomAction]
         public static ActionResult CheckConnectionUI(Session session)
         {
             string Msg = default(string);
@@ -684,7 +848,21 @@ namespace WebsitePanel.WIXInstaller
             var Result = Adapter.CheckSql(new SetupVariables { InstallConnectionString = ConnStr }, out Msg) == CheckStatuses.Success;
             session["DB_CONN_CORRECT"] = Result ? YesNo.Yes : YesNo.No;
             session["DB_CONN"] = Result ? ConnStr : "";
-            session["DB_CONN_MSG"] = Msg;
+            session["DB_CONN_MSG"] = string.Format(Result? "Success. {0}" : "Error. {0}", Msg);
+            return ActionResult.Success;
+        }
+        [CustomAction]
+        public static ActionResult GetDbSkip(Session Ctx)
+        {
+            PopUpDebugger();
+            Ctx.AttachToSetupLog();
+            Log.WriteStart("GetDbSkip");
+            var ConnStr = Ctx["DB_CONN"];
+            var DbName = Ctx["DB_DATABASE"];
+            var Tmp = Adapter.SkipCreateDb(ConnStr, DbName) ? YesNo.Yes : YesNo.No;
+            Log.WriteInfo("DB_SKIP_CREATE is " + Tmp);
+            Ctx["DB_SKIP_CREATE"] = Tmp;
+            Log.WriteEnd("GetDbSkip");
             return ActionResult.Success;
         }
         [CustomAction]
@@ -913,7 +1091,18 @@ namespace WebsitePanel.WIXInstaller
             {
                 Result = false;
                 Msg = "The database name can't be empty.";
-
+            }
+            return Result;
+        }
+        internal static bool ValidateCryptoKeyUI(Session Ctx, out string Msg)
+        {
+            Msg = string.Empty;
+            var Result = true;
+            string DbName = Ctx["PI_SCHEDULER_CRYPTO_KEY"];
+            if (string.IsNullOrWhiteSpace(DbName))
+            {
+                Result = false;
+                Msg = "The crypto key can't be empty.";
             }
             return Result;
         }
@@ -960,6 +1149,12 @@ namespace WebsitePanel.WIXInstaller
                         break;
                     case WiXInstallType.MaintenancePortal:
                         Install = PortalSetup.Create(Ctx.CustomActionData, SetupActions.Setup);
+                        break;
+                    case WiXInstallType.InstallScheduler:
+                        Install = SchedulerSetup.Create(Ctx.CustomActionData, SetupActions.Install);
+                        break;
+                    case WiXInstallType.RemoveScheduler:
+                        Install = SchedulerSetup.Create(Ctx.CustomActionData, SetupActions.Uninstall);
                         break;
                     default:
                         throw new NotImplementedException();
@@ -1024,14 +1219,6 @@ namespace WebsitePanel.WIXInstaller
             SetupScript Result = new ExpressScript(CtxVars);
             Result.Actions.Add(new InstallAction(ActionTypes.StopApplicationPool) { SetupVariables = CtxVars });
             Result.Actions.Add(new InstallAction(ActionTypes.Backup) { SetupVariables = CtxVars });
-            var ServiceCtx = new SetupVariables() { ComponentId = CtxVars.ComponentId };
-            AppConfig.LoadComponentSettings(ServiceCtx);
-            if (!string.IsNullOrWhiteSpace(ServiceCtx.ServiceName))
-            {
-                CtxVars.ServiceName = ServiceCtx.ServiceName;
-                CtxVars.ServiceFile = ServiceCtx.ServiceFile;
-                Result.Actions.Add(new InstallAction(ActionTypes.StopWindowsService));
-            }
             Result.Actions.Add(new InstallAction(ActionTypes.DeleteDirectory) { SetupVariables = CtxVars, Path = CtxVars.InstallFolder });
             return Result;
         }
@@ -1071,9 +1258,11 @@ namespace WebsitePanel.WIXInstaller
         InstallServer,
         InstallEnterpriseServer,
         InstallPortal,
+        InstallScheduler,
         RemoveServer,
         RemoveEnterpriseServer,
         RemovePortal,
+        RemoveScheduler,
         MaintenanceServer,
         MaintenanceEnterpriseServer,
         MaintenancePortal
