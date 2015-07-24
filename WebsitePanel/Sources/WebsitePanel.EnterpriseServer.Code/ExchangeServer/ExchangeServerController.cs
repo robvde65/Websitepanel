@@ -994,6 +994,26 @@ namespace WebsitePanel.EnterpriseServer
 
                 // Log Extension
                 org.LogProperty(o => o.ServiceId);
+                LogExtension.SetItemName(org.Name);
+                LogExtension.WriteVariables(new
+                {
+                    allowNonProvisionableDevices,
+                    attachmentsEnabled,
+                    maxAttachmentSizeKB,
+                    uncAccessEnabled,
+                    wssAccessEnabled,
+                    devicePasswordEnabled,
+                    alphanumericPasswordRequired,
+                    passwordRecoveryEnabled,
+                    deviceEncryptionEnabled,
+                    allowSimplePassword,
+                    maxPasswordFailedAttempts,
+                    minPasswordLength,
+                    inactivityLockMin,
+                    passwordExpirationDays,
+                    passwordHistory,
+                    refreshInterval
+                });
 
                 // get policy
                 int exchangeServiceId = GetExchangeServiceID(org.PackageId);
@@ -1776,7 +1796,7 @@ namespace WebsitePanel.EnterpriseServer
             TaskManager.StartTask("EXCHANGE", "CREATE_MAILBOX", displayName, itemId);
             
             // Log Extension
-            LogExtension.WriteVariables(new {accountName, displayName});
+            LogExtension.WriteVariables(new { accountName, displayName, accountType });
 
             bool userCreated = false;
             Organization org = null;
@@ -2907,6 +2927,7 @@ namespace WebsitePanel.EnterpriseServer
 
                 // Log Extension
                 LogExtension.SetItemName(account.PrimaryEmailAddress);
+                LogExtension.WriteVariables(new { sendAsaccounts, fullAccessAcounts, onBehalfOfAccounts });
 
                 // get mailbox settings
                 int exchangeServiceId = GetExchangeServiceID(org.PackageId);
@@ -2938,7 +2959,7 @@ namespace WebsitePanel.EnterpriseServer
             if (accountCheck < 0) return accountCheck;
 
             // place log record
-            TaskManager.StartTask("EXCHANGE", "SET_MAILBOXPLAN", itemId);
+            TaskManager.StartTask("EXCHANGE", "SET_MAILBOXPLAN_RETENTIONPOLICY_ARCHIVING", itemId);
 
             try
             {
@@ -2953,6 +2974,10 @@ namespace WebsitePanel.EnterpriseServer
 
                 // load account
                 ExchangeAccount account = GetAccount(itemId, accountId);
+
+                // Log Extension
+                LogExtension.SetItemName(account.UserPrincipalName);
+                LogExtension.WriteVariable("RetentionPolicy/Archiving", archivePlanId.ToString());
 
                 // load org quotas
                 OrganizationStatistics orgStats = GetOrganizationStatisticsByOrganization(itemId);
@@ -3057,7 +3082,7 @@ namespace WebsitePanel.EnterpriseServer
                 SetMailBoxRetentionPolicyAndArchiving(itemId, mailboxPlanId, archivePlanId, account.UserPrincipalName, exchange, org.OrganizationId, resPolicy, EnableArchiving);
                 if (!resPolicy.IsSuccess)
                 {
-                    TaskManager.WriteError("Error SetMailBoxRetentionPolicy", resPolicy.ErrorCodes.ToArray());
+                    TaskManager.WriteError("Error SetMailBoxRetentionPolicy: " + string.Join(", ", resPolicy.ErrorCodes.ToArray()));
                 }
 
                 DataProvider.SetExchangeAccountMailboxPlan(accountId, mailboxPlanId, archivePlanId, EnableArchiving);
@@ -3183,7 +3208,7 @@ namespace WebsitePanel.EnterpriseServer
         public static int AddExchangeMailboxPlan(int itemID, ExchangeMailboxPlan mailboxPlan)
         {
             // place log record
-            TaskManager.StartTask("EXCHANGE", "ADD_EXCHANGE_MAILBOXPLAN", mailboxPlan.MailboxPlan, itemID);
+            TaskManager.StartTask("EXCHANGE", "ADD_EXCHANGE_MAILBOXPLAN_RETENTIONPOLICY_ARCHIVING", mailboxPlan.MailboxPlan, itemID);
 
             try
             {
@@ -3354,7 +3379,7 @@ namespace WebsitePanel.EnterpriseServer
 
         public static int DeleteExchangeMailboxPlan(int itemID, int mailboxPlanId)
         {
-            TaskManager.StartTask("EXCHANGE", "DELETE_EXCHANGE_MAILBOXPLAN", itemID);
+            TaskManager.StartTask("EXCHANGE", "DELETE_EXCHANGE_MAILBOXPLAN_RETENTIONPOLICY_ARCHIVING", itemID);
 
             try
             {
@@ -3391,6 +3416,10 @@ namespace WebsitePanel.EnterpriseServer
 
             try
             {
+                // Log Extension
+                var org = GetOrganization(itemId);
+                if (org != null) LogExtension.SetItemName(org.Name);
+
                 DataProvider.SetOrganizationDefaultExchangeMailboxPlan(itemId, mailboxPlanId);
             }
             catch (Exception ex)
@@ -3412,6 +3441,8 @@ namespace WebsitePanel.EnterpriseServer
 
         private static void SetMailBoxRetentionPolicyAndArchiving(int itemId, int mailboxPlanId, int retentionPolicyId, string accountName, ExchangeServer exchange, string orgId, ResultObject result, bool EnableArchiving)
         {
+            // Log Extension
+            LogExtension.WriteVariables(new { retentionPolicyId });
 
             long archiveQuotaKB = 0;
             long archiveWarningQuotaKB = 0;
@@ -3615,7 +3646,9 @@ namespace WebsitePanel.EnterpriseServer
             {
                 // Log Extension
                 LogExtension.WriteObject(tag);
-                
+                var oldObj = GetExchangeRetentionPolicyTag(itemID, tag.TagID);
+                LogExtension.LogPropertiesIfChanged(oldObj, tag);
+
                 // load package context
                 PackageContext cntx = PackageController.GetPackageContext(org.PackageId);
 
@@ -4812,6 +4845,10 @@ namespace WebsitePanel.EnterpriseServer
             try
             {
                 account = GetAccount(itemId, accountId);
+            
+                // Log Extension
+                LogExtension.SetItemName(account.UserPrincipalName);
+                LogExtension.WriteVariables(new { sendAsAccounts, sendOnBehalfAccounts });
             }
             catch (Exception ex)
             {
@@ -4971,6 +5008,10 @@ namespace WebsitePanel.EnterpriseServer
 
                 // load account
                 ExchangeAccount memberAccount = GetAccount(itemId, memberId);
+
+                // Log Extension
+                LogExtension.SetItemName(memberAccount.PrimaryEmailAddress);
+                LogExtension.WriteVariables(new { distributionListName });
 
                 int exchangeServiceId = GetExchangeServiceID(org.PackageId);
                 ExchangeServer exchange = GetExchangeServer(exchangeServiceId, org.ServiceId);
@@ -5458,6 +5499,7 @@ namespace WebsitePanel.EnterpriseServer
 
                 // Log Extension
                 LogExtension.LogPropertiesIfChanged(oldObj, newObj);
+                LogExtension.SetItemName(account.DisplayName);
 
                 // update folder name
                 string origName = account.DisplayName;

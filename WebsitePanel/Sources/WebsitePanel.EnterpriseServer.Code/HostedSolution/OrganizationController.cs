@@ -4130,6 +4130,9 @@ namespace WebsitePanel.EnterpriseServer
                 // load user account
                 ExchangeAccount account = ExchangeServerController.GetAccount(itemId, accountId);
 
+                // Log Extension
+                LogExtension.SetItemName(account.PrimaryEmailAddress);
+
                 Organizations orgProxy = GetOrganizationProxy(org.ServiceId);
 
                 orgProxy.AddObjectToSecurityGroup(org.OrganizationId, account.AccountName, groupName);
