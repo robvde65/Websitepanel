@@ -20,7 +20,7 @@
 					<asp:TextBox id="txtDomainName" Runat="server" Width="200px" CssClass="NormalTextBox">
 					</asp:TextBox>
 					<asp:RegularExpressionValidator id="valCorrectDomainName" runat="server" CssClass="NormalBold"
-						ValidationExpression="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.){1,10}[a-zA-Z]{2,6}$"
+						ValidationExpression="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.){1,10}[a-zA-Z]{2,15}$"
 						ErrorMessage="&nbsp;*" ControlToValidate="txtDomainName" Display="Dynamic"></asp:RegularExpressionValidator>
 				</itemtemplate>
 			</asp:TemplateField>

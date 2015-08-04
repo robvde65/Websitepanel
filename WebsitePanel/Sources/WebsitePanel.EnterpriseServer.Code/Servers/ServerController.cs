@@ -2715,7 +2715,7 @@ namespace WebsitePanel.EnterpriseServer
         {
             try
             {
-                var whoisResult = WhoisClient.Query(domain.DomainName.ToLowerInvariant());
+                var whoisResult = WhoisClient.Query(domain.ZoneName.ToLowerInvariant());
 
                 string creationDateString = ParseWhoisDomainInfo(whoisResult.Raw, _createdDatePatterns);
                 string expirationDateString = ParseWhoisDomainInfo(whoisResult.Raw, _expiredDatePatterns);

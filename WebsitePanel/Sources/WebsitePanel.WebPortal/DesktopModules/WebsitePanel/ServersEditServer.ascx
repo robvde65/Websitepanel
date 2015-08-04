@@ -120,7 +120,7 @@
                             customerdomain.com.&nbsp;<asp:TextBox ID="txtInstantAlias" runat="server" CssClass="NormalTextBox" Width="200px" CausesValidation="true"></asp:TextBox>
                             <asp:RegularExpressionValidator id="DomainFormatValidator" ValidationGroup="Server" runat="server" meta:resourcekey="DomainFormatValidator"
 		    ControlToValidate="txtInstantAlias" Display="Dynamic" SetFocusOnError="true"
-		    ValidationExpression="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.){1,10}[a-zA-Z]{2,6}$"></asp:RegularExpressionValidator></td>
+		    ValidationExpression="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.){1,10}[a-zA-Z]{2,15}$"></asp:RegularExpressionValidator></td>
                     </tr>
                 </table>
             </asp:Panel>
