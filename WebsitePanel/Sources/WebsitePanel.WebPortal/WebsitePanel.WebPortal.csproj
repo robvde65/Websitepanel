@@ -230,8 +230,6 @@
     <Content Include="bin\WebsitePanel.EnterpriseServer.Base.pdb" />
     <Content Include="bin\WebsitePanel.EnterpriseServer.Client.dll" />
     <Content Include="bin\WebsitePanel.EnterpriseServer.Client.pdb" />
-    <Content Include="bin\WebsitePanel.Portal.Ecommerce.Modules.dll" />
-    <Content Include="bin\WebsitePanel.Portal.Ecommerce.Modules.pdb" />
     <Content Include="bin\WebsitePanel.Portal.Modules.dll" />
     <Content Include="bin\WebsitePanel.Portal.Modules.pdb" />
     <Content Include="bin\WebsitePanel.Providers.Base.dll" />
@@ -337,11 +335,10 @@
     <Content Include="App_Themes\Default\Common.skin" />
     <Content Include="App_Themes\Default\DataBoundControls.skin" />
     <Content Include="App_Themes\Default\Icons.skin" />
-    <Content Include="bin\WebsitePanel.Portal.Ecommerce.Modules.dll.config" />
     <Content Include="bin\WebsitePanel.Portal.Modules.dll.config" />
     <Content Include="bin\WebsitePanel.WebPortal.dll.config" />
     <Content Include="EnterpriseFolderDataHandler.ashx" />
-    <None Include="Properties\PublishProfiles\Default Settings.pubxml" />
+    <None Include="Properties\PublishProfiles\HOSTING2014.pubxml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Containers\Default\TopPane.ascx" />
