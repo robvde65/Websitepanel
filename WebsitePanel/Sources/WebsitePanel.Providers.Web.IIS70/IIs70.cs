@@ -4542,26 +4542,50 @@ namespace WebsitePanel.Providers.Web
 
         #region Php Management
 
+        protected void AddUniquePhpHandlerToList(List<PhpVersion> result, ConfigurationElement handler)
+        {
+            if (string.Equals(handler["path"].ToString(), "*.php", StringComparison.OrdinalIgnoreCase))
+            {
+                var executable = handler["ScriptProcessor"].ToString().Split('|')[0];
+                if (string.Equals(handler["Modules"].ToString(), "FastCgiModule", StringComparison.OrdinalIgnoreCase) && File.Exists(executable))
+                {
+                    var handlerName = handler["Name"].ToString();
+                    if (!result.Exists(v => v.HandlerName == handlerName && v.ExecutionPath == handler["ScriptProcessor"].ToString()))
+                    {
+                        result.Add(new PhpVersion() { HandlerName = handlerName, Version = GetPhpExecutableVersion(executable), ExecutionPath = handler["ScriptProcessor"].ToString() });
+                    }
+                }
+            }
+        }
+
 	    protected PhpVersion[] GetPhpVersions(ServerManager srvman, WebVirtualDirectory virtualDir)
 	    {
-	        var config = srvman.GetWebConfiguration(GetSiteIdFromVirtualDir(virtualDir), virtualDir.VirtualPath);
-	        //var config = srvman.GetApplicationHostConfiguration();
-	        var handlersSection = config.GetSection(Constants.HandlersSection);
-
 	        var result = new List<PhpVersion>();
 
-	        // Loop through available maps and fill installed processors
+	        // Loop through all available maps installed for virtualDir, site and server and and fill installed processors
+            var config = srvman.GetWebConfiguration(GetSiteIdFromVirtualDir(virtualDir), virtualDir.VirtualPath);
+            var handlersSection = config.GetSection(Constants.HandlersSection);
 	        foreach (var handler in handlersSection.GetCollection())
 	        {
-	            if (string.Equals(handler["path"].ToString(), "*.php", StringComparison.OrdinalIgnoreCase))
-	            {
-	                var executable = handler["ScriptProcessor"].ToString().Split('|')[0];
-	                if (string.Equals(handler["Modules"].ToString(), "FastCgiModule", StringComparison.OrdinalIgnoreCase) && File.Exists(executable))
-	                {
-	                    var handlerName = handler["Name"].ToString();
-	                    result.Add(new PhpVersion() {HandlerName = handlerName, Version = GetPhpExecutableVersion(executable), ExecutionPath = handler["ScriptProcessor"].ToString()});
-	                }
-	            }
+                AddUniquePhpHandlerToList(result, handler);
+	        }
+
+            if (!(virtualDir is WebSite))
+            {
+                var siteConfig = srvman.GetWebConfiguration(GetSiteIdFromVirtualDir(virtualDir), "/");
+                var siteHandlersSection = siteConfig.GetSection(Constants.HandlersSection);
+
+                foreach (var handler in siteHandlersSection.GetCollection())
+                {
+                    AddUniquePhpHandlerToList(result, handler);
+                }
+            }
+
+	        var srvConfig = srvman.GetApplicationHostConfiguration();
+            var srvHandlersSection = srvConfig.GetSection(Constants.HandlersSection);
+            foreach (var handler in srvHandlersSection.GetCollection())
+	        {
+                AddUniquePhpHandlerToList(result, handler);
 	        }
 
 	        return result.ToArray();
@@ -4612,11 +4636,42 @@ namespace WebsitePanel.Providers.Web
 	            var handlersCollection = handlersSection.Handlers;
 
 	            var handlerElement = handlersCollection[handlerName];
+
+                var updatingHandlerOrder = true;
+
+                if (handlerElement == null)
+                {
+                    // If handlerElement is null it is not found in the current virtual dirs handlers collection, 
+                    // search in site config and in server config and add the new handler
+                    updatingHandlerOrder = false;
+
+                    if (!(virtualDir is WebSite))
+                    {
+                        var siteConfig = srvman.GetWebConfiguration(GetSiteIdFromVirtualDir(virtualDir), "/");
+                        var siteHandlersSection = (HandlersSection)siteConfig.GetSection(Constants.HandlersSection, typeof(HandlersSection));
+                        var siteHandlersCollection = siteHandlersSection.Handlers;
+
+                        handlerElement = siteHandlersCollection[handlerName];
+                    }
+                }
+
+                if (handlerElement == null)
+                {
+                    var serverConfig = srvman.GetApplicationHostConfiguration();
+                    var serverHandlersSection = (HandlersSection)serverConfig.GetSection(Constants.HandlersSection, typeof(HandlersSection));
+                    var serverHandlersCollection = serverHandlersSection.Handlers;
+
+                    handlerElement = serverHandlersCollection[handlerName];
+                }
+
                 var activeHandlerElement = handlersCollection[GetActivePhpHandlerName(srvman, virtualDir)];
                 
                 var activeHandlerIndex = handlersCollection.IndexOf(activeHandlerElement);
-                
-                handlersCollection.Remove(handlerElement);
+
+                if (updatingHandlerOrder)
+                {
+                    handlersCollection.Remove(handlerElement);
+                }
                 
                 handlersCollection.AddCopyAt(activeHandlerIndex, handlerElement);
 

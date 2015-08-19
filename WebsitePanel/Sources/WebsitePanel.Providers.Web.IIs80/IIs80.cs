@@ -117,7 +117,7 @@ namespace WebsitePanel.Providers.Web
                 rk.Close();
             }
 
-            return value == 8;
+            return value >= 8;
         }
 
         public override bool IsInstalled()

@@ -2978,6 +2978,7 @@ namespace WebsitePanel.EnterpriseServer
                 // Log Extension
                 LogExtension.SetItemName(account.UserPrincipalName);
                 LogExtension.WriteVariable("RetentionPolicy/Archiving", archivePlanId.ToString());
+                LogExtension.WriteVariables(new { EnableArchiving, mailboxPlanId });
 
                 // load org quotas
                 OrganizationStatistics orgStats = GetOrganizationStatisticsByOrganization(itemId);
@@ -2993,6 +2994,9 @@ namespace WebsitePanel.EnterpriseServer
                 ExchangeMailboxPlan plan = GetExchangeMailboxPlan(itemId, mailboxPlanId);
                 ExchangeAccount exchangeAccount = GetAccount(itemId, accountId);
                 ExchangeMailboxPlan oldPlan = GetExchangeMailboxPlan(itemId, exchangeAccount.MailboxPlanId);
+
+                // Log Extension
+                LogExtension.WriteObject(plan);
 
                 if (maxDiskSpace != -1)
                 {
@@ -3419,6 +3423,8 @@ namespace WebsitePanel.EnterpriseServer
                 // Log Extension
                 var org = GetOrganization(itemId);
                 if (org != null) LogExtension.SetItemName(org.Name);
+                ExchangeMailboxPlan plan = GetExchangeMailboxPlan(itemId, mailboxPlanId);
+                LogExtension.WriteObject(plan);
 
                 DataProvider.SetOrganizationDefaultExchangeMailboxPlan(itemId, mailboxPlanId);
             }
@@ -3648,6 +3654,7 @@ namespace WebsitePanel.EnterpriseServer
                 LogExtension.WriteObject(tag);
                 var oldObj = GetExchangeRetentionPolicyTag(itemID, tag.TagID);
                 LogExtension.LogPropertiesIfChanged(oldObj, tag);
+                LogExtension.SetItemName(tag.TagName);
 
                 // load package context
                 PackageContext cntx = PackageController.GetPackageContext(org.PackageId);
@@ -6513,18 +6520,22 @@ namespace WebsitePanel.EnterpriseServer
                     Bitmap bitmap;
 
                     if (picture == null)
-                        bitmap = new Bitmap(1, 1);
+                    {
+                        res = exchange.SetPicture(account.AccountName, null);
+                    }
                     else
+                    {
                         bitmap = new Bitmap(new MemoryStream(picture));
 
-                    MemoryStream pictureStream = new MemoryStream();
+                        MemoryStream pictureStream = new MemoryStream();
 
-                    if ((bitmap.Width > MAX_THUMBNAILPHOTO_SIZE) || (bitmap.Height > MAX_THUMBNAILPHOTO_SIZE))
-                        bitmap = ResizeBitmap(bitmap, new Size(MAX_THUMBNAILPHOTO_SIZE, MAX_THUMBNAILPHOTO_SIZE));
+                        if ((bitmap.Width > MAX_THUMBNAILPHOTO_SIZE) || (bitmap.Height > MAX_THUMBNAILPHOTO_SIZE))
+                            bitmap = ResizeBitmap(bitmap, new Size(MAX_THUMBNAILPHOTO_SIZE, MAX_THUMBNAILPHOTO_SIZE));
 
-                    bitmap.Save(pictureStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        bitmap.Save(pictureStream, System.Drawing.Imaging.ImageFormat.Jpeg);
 
-                    res = exchange.SetPicture(account.AccountName, pictureStream.ToArray());
+                        res = exchange.SetPicture(account.AccountName, pictureStream.ToArray());
+                    }
                 }
             }
             catch (Exception ex)

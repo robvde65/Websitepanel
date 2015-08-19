@@ -132,8 +132,11 @@ namespace WebsitePanel.EnterpriseServer
             // load IP address
             site.SiteIPAddressId = siteItem.SiteIPAddressId;
             IPAddressInfo ip = ServerController.GetIPAddress(siteItem.SiteIPAddressId);
-            if(ip != null)
+            if (ip != null)
+            {
                 site.SiteIPAddress = ip.ExternalIP;
+                site.SiteInternalIPAddress = ip.InternalIP;
+            }
 
             // check if site has dedicated IP assigned
             var siteIpAddresses = ServerController.GetItemIPAddresses(siteItemId, IPAddressPool.None);
@@ -4360,17 +4363,27 @@ Please ensure the space has been allocated {0} IP address as a dedicated one and
                 foreach (DomainInfo pointer in pointers)
                     DeleteWebSitePointer(siteItemId, pointer.DomainId, true, true, true);
 
+                // Get certificateinfo to delete from metabase later, WSP expects only one active certificate for each site
+                var certificatesToDeleteFromMetaBase = GetCertificatesForSite(item.Id).Where(c => c.Installed).ToList();
+
 				SSLCertificate certificate = server.installPFX(pfx, password, item);
 				if (certificate.SerialNumber == null)
 				{
 					result.AddError("Error_Installing_certificate", null);
 					result.IsSuccess = false;
 				}
-				DataProvider.AddPFX(SecurityContext.User.UserId, item.PackageId, item.Id, service.UserId, certificate.Hostname,
-				   certificate.FriendlyName, certificate.DistinguishedName, certificate.CSRLength, certificate.SerialNumber,
-				   certificate.ValidFrom, certificate.ExpiryDate);
 
+                if (result.IsSuccess)
+                {
+                    DataProvider.AddPFX(SecurityContext.User.UserId, item.PackageId, item.Id, service.UserId, certificate.Hostname,
+                       certificate.FriendlyName, certificate.DistinguishedName, certificate.CSRLength, certificate.SerialNumber,
+                       certificate.ValidFrom, certificate.ExpiryDate);
 
+                    foreach (var certificateToDeleteFromMetaBase in certificatesToDeleteFromMetaBase)
+                    {
+                        DataProvider.DeleteCertificate(SecurityContext.User.UserId, item.PackageId, certificateToDeleteFromMetaBase.id);
+                    }
+                }
 			}
 			catch (Exception ex)
 			{

@@ -7,6 +7,8 @@ using WebsitePanel.EnterpriseServer.Base.HostedSolution;
 using WebsitePanel.Providers.HostedSolution;
 using WebsitePanel.Providers.Common;
 using WebsitePanel.Providers.ResultObjects;
+using System.Drawing;
+using System.IO;
 
 namespace WebsitePanel.Portal
 {
@@ -42,14 +44,19 @@ namespace WebsitePanel.Portal
             int AccountID = Param("AccountID");
 
             BytesResult res = ES.Services.ExchangeServer.GetPicture(ItemID, AccountID);
-            if (res.IsSuccess)
+            if ((res!=null)&&(res.IsSuccess) && (res.Value != null))
             {
                 context.Response.ContentType = "image/jpeg";
                 context.Response.BinaryWrite(res.Value);
             }
             else
             {
-                context.Response.Redirect(PortalUtils.GetThemedImage("empty.gif"), true);
+                MemoryStream pictureStream = new MemoryStream();
+                Bitmap emptyBmp = new Bitmap(1, 1);
+                emptyBmp.Save(pictureStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                context.Response.ContentType = "image/jpeg";
+                context.Response.BinaryWrite(pictureStream.ToArray());
             }
         }
 

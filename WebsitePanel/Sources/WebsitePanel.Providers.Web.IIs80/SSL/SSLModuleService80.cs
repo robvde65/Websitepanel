@@ -336,7 +336,9 @@ namespace WebsitePanel.Providers.Web.Iis
                 // For every hostname
                 foreach (var hostName in hostNames)
                 {
-                    var bindingInformation = string.Format("{0}:443:{1}", website.SiteIPAddress ?? "*", dedicatedIp ? "" : hostName);
+                    var bindingIpAddress = string.IsNullOrEmpty(website.SiteInternalIPAddress) ? website.SiteIPAddress : website.SiteInternalIPAddress;
+
+                    var bindingInformation = string.Format("{0}:443:{1}", bindingIpAddress ?? "*", dedicatedIp ? "" : hostName);
 
                     Binding siteBinding = UseCCS ? 
                         srvman.Sites[website.SiteId].Bindings.Add(bindingInformation, "https") : 

@@ -52,6 +52,7 @@ namespace WebsitePanel.Portal.HostedSolution
 
                 MailboxTabsId.Visible = (PanelRequest.Context == "Mailbox");
                 UserTabsId.Visible = (PanelRequest.Context == "User");
+                pnlThumbnailphoto.Visible = (PanelRequest.Context == "Mailbox");
 
                 if (GetLocalizedString("buttonPanel.OnSaveClientClick") != null)
                     buttonPanel.OnSaveClientClick = GetLocalizedString("buttonPanel.OnSaveClientClick");

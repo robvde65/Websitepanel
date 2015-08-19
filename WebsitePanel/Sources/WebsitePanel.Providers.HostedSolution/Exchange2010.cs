@@ -712,7 +712,7 @@ namespace WebsitePanel.Providers.HostedSolution
         #endregion
 
         #region Picture
-        public virtual ResultObject SetPicture(string accountName, byte[] picture)
+        public override ResultObject SetPicture(string accountName, byte[] picture)
         {
             ExchangeLog.LogStart("SetPicture");
 
@@ -723,10 +723,20 @@ namespace WebsitePanel.Providers.HostedSolution
             {
                 runSpace = OpenRunspace();
                 Command cmd;
-                cmd = new Command("Import-RecipientDataProperty");
-                cmd.Parameters.Add("Identity", accountName);
-                cmd.Parameters.Add("Picture", true);
-                cmd.Parameters.Add("FileData", picture);
+
+                if (picture == null)
+                {
+                    cmd = new Command("Set-Mailbox");
+                    cmd.Parameters.Add("Identity", accountName);
+                    cmd.Parameters.Add("RemovePicture", true);
+                }
+                else
+                {
+                    cmd = new Command("Import-RecipientDataProperty");
+                    cmd.Parameters.Add("Identity", accountName);
+                    cmd.Parameters.Add("Picture", true);
+                    cmd.Parameters.Add("FileData", picture);
+                }
                 ExecuteShellCommand(runSpace, cmd, res, true);
             }
             finally
@@ -737,7 +747,7 @@ namespace WebsitePanel.Providers.HostedSolution
 
             return res;
         }
-        public virtual BytesResult GetPicture(string accountName)
+        public override BytesResult GetPicture(string accountName)
         {
             ExchangeLog.LogStart("GetPicture");
 

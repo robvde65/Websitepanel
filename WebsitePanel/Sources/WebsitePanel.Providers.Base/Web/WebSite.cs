@@ -65,6 +65,7 @@ namespace WebsitePanel.Providers.Web
 	    private bool heliconApeEnabled;
         private HeliconApeStatus heliconApeStatus;
         private bool sniEnabled;
+		private string siteInternalIPAddress;
 
 		public WebSite()
 		{
@@ -201,6 +202,12 @@ namespace WebsitePanel.Providers.Web
             get { return this.sniEnabled; }
             set { this.sniEnabled = value; }
 	    }
+
+        public string SiteInternalIPAddress
+		{
+			get { return siteInternalIPAddress; }
+			set { siteInternalIPAddress = value; }
+		}
 	}
 
 	[Flags]

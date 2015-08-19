@@ -8288,10 +8288,20 @@ namespace WebsitePanel.Providers.HostedSolution
             {
                 runSpace = OpenRunspace();
                 Command cmd;
-                cmd = new Command("Import-RecipientDataProperty");
-                cmd.Parameters.Add("Identity", accountName);
-                cmd.Parameters.Add("Picture", true);
-                cmd.Parameters.Add("FileData", picture);
+
+                if (picture == null)
+                {
+                    cmd = new Command("Set-Mailbox");
+                    cmd.Parameters.Add("Identity", accountName);
+                    cmd.Parameters.Add("RemovePicture", true);
+                }
+                else
+                {
+                    cmd = new Command("Import-RecipientDataProperty");
+                    cmd.Parameters.Add("Identity", accountName);
+                    cmd.Parameters.Add("Picture", true);
+                    cmd.Parameters.Add("FileData", picture);
+                }
                 ExecuteShellCommand(runSpace, cmd, res);
             }
             finally

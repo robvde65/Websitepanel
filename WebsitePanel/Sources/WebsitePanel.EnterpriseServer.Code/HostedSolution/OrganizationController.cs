@@ -4132,6 +4132,7 @@ namespace WebsitePanel.EnterpriseServer
 
                 // Log Extension
                 LogExtension.SetItemName(account.PrimaryEmailAddress);
+                LogExtension.WriteVariables(new { groupName });
 
                 Organizations orgProxy = GetOrganizationProxy(org.ServiceId);
 

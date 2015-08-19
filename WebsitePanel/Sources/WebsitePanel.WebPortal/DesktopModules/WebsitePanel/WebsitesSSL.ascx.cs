@@ -335,8 +335,7 @@ namespace WebsitePanel.Portal
 			string certPassword = txtPFXInstallPassword.Text;
 
 			ResultObject result = ES.Services.WebServers.InstallPfx(pfx, webSiteId, txtPFXInstallPassword.Text);
-			//
-			SSLCertificate certificate = ES.Services.WebServers.GetSiteCert(webSiteId);
+
 			// Check the operation status
 			if (result.IsSuccess.Equals(false))
 			{
@@ -344,7 +343,7 @@ namespace WebsitePanel.Portal
 			    RefreshControlLayout();
                 return;
 			}
-			//
+
 			messageBox.ShowSuccessMessage("WEB_INSTALL_CSR");
 			SSLNotInstalled.Visible = false;
 			tabInstalled.Visible = true;
@@ -468,7 +467,7 @@ namespace WebsitePanel.Portal
 
 		protected void ImportCertificate(int webSiteId)
 		{
-			// Try to importe the certificate
+			// Try to import the certificate
 			ResultObject result = ES.Services.WebServers.ImportCertificate(webSiteId);
 			// Display error message
 			if (!result.IsSuccess)

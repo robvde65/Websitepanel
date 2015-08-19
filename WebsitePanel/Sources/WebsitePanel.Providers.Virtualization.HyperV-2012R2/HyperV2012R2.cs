@@ -346,6 +346,9 @@ namespace WebsitePanel.Providers.Virtualization
                 cmdNew.Parameters.Add("VHDPath", vm.VirtualHardDrivePath);
                 PowerShell.Execute(cmdNew, true, true);
 
+                // Delete default adapter (MacAddress in not running and newly created VM is 00-00-00-00-00-00)
+                NetworkAdapterHelper.Delete(PowerShell, vm.Name, "000000000000");
+
                 // Set VM
                 Command cmdSet = new Command("Set-VM");
                 cmdSet.Parameters.Add("Name", vm.Name);
