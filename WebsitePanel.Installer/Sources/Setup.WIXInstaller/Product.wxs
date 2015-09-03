@@ -4,7 +4,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
     <?include Config.Wxi?>
-    <Product Id="*" Name="$(var.NAME)" Language="1033" Version="$(var.VERSION)" Manufacturer="Outercurve Foundation"
+    <Product Id="*" Name="$(var.NAME)" Language="1033" Version="$(var.VERSION)" Manufacturer="$(var.MANUFACTURER)"
              UpgradeCode="F59D3AED-C1B8-46B4-AFE2-A97F3B7DFB5E">
         <Package  InstallerVersion="200" Compressed="yes" InstallPrivileges="elevated" InstallScope="perMachine" Description="$(var.NAME) $(var.VERSION)" Comments="$(var.DESCRIPTION)" />
         <Media Id="1" EmbedCab="yes" Cabinet="websitepanel_cab" />
@@ -438,11 +438,12 @@
                 <Control Type="PushButton" Id ="CheckConnButton" X="150" Y="200" Width="74" Height="17" Text="Test connection" />
             </Dialog>
             <!--All events and actions in one place-->
+            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="PrereqCheckDlg" Order="2">1</Publish>
             <!--LicenseAgreementDlg-->
-            <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="PrereqCheckDlg" Order="3">LicenseAccepted = "1"</Publish>
+            <!--<Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="PrereqCheckDlg" Order="3">LicenseAccepted = "1"</Publish>-->
             <!--PrereqCheckDlg-->
             <Publish Dialog="PrereqCheckDlg" Control="Cancel" Event="SpawnDialog" Value="CancelDlg">1</Publish>
-            <Publish Dialog="PrereqCheckDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" Order="1">1</Publish>
+            <Publish Dialog="PrereqCheckDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="1">1</Publish>
             <Publish Dialog="PrereqCheckDlg" Control="Next" Event="NewDialog" Value="ChoosePreinstallDlg" Order="2"><![CDATA[PI_PREREQ_IIS=0 OR PI_PREREQ_ASPNET=0]]></Publish>
             <Publish Dialog="PrereqCheckDlg" Control="Next" Event="NewDialog" Value="CustomizeDlg" Order="1">1</Publish>
             <!--ChoosePreinstallDlg-->
@@ -652,7 +653,7 @@
             <!--ExitDialog-->
             <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1</Publish>
         </UI>
-        <Icon Id="WebSitePanel.ico" SourceFile="WebSitePanel.ico" />
+        <Icon Id="WebSitePanel.ico" SourceFile="$(var.ICONLOGO)" />
         <Binary Id="Assembly_CA" SourceFile="bin\WebsitePanel.WIXInstaller.CA.dll" />
         <Binary Id="MsiExt.ActiveDirectory" SourceFile="..\..\..\tools\msiext\CustomActions\ActiveDirectory.dll" />
         <Binary Id="bannrbmp" SourceFile="bannrbmp.bmp" />
@@ -662,7 +663,7 @@
         <Binary Id="UpdateDB" SourceFile="$(var.PROJECTPATH)\Deploy\$(var.BUILD)\Database\wix_update_db.sql" />
         <WixVariable Id="WixUIBannerBmp" Value="bannrbmp.bmp" />
         <WixVariable Id="WixUIDialogBmp" Value="dlgbmp.bmp" />
-        <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+        <!--<WixVariable Id="WixUILicenseRtf" Value="License.rtf" />-->
         <WixVariable Id="BUILDESPATH" Value = "$(var.PROJECTPATH)\Build\$(var.BUILD)\EnterpriseServer" />
         <WixVariable Id="BUILDSPATH" Value = "$(var.PROJECTPATH)\Build\$(var.BUILD)\Server" />
         <WixVariable Id="BUILDPPATH" Value = "$(var.PROJECTPATH)\Build\$(var.BUILD)\Portal" />

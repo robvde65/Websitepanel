@@ -12,4 +12,7 @@
     <?define SchedulerTitle="Scheduler Service"?>
     <?define SchedulerDescription="WebsitePanel Scheduler Service"?>
     <?define VERSION="$(var.Version)"?>
+    <?define MANUFACTURER="Outercurve Foundation"?>
+    <?define LICENCE="..\..\..\WebsitePanel.Installer\Sources\Setup.WIXInstaller\License.rtf"?>
+    <?define ICONLOGO="..\..\..\WebsitePanel.Installer\Sources\Setup.WIXInstaller\WebsitePanel.ico"?>
 </Include>
