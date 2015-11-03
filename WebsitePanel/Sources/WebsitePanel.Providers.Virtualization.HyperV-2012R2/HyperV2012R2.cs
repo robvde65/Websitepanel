@@ -176,7 +176,7 @@ namespace WebsitePanel.Providers.Virtualization
                     vm.ProcessorCount = result[0].GetInt("ProcessorCount");
                     vm.ParentSnapshotId = result[0].GetString("ParentSnapshotId");
                     vm.Heartbeat = VirtualMachineHelper.GetVMHeartBeatStatus(PowerShell, vm.Name);
-                    vm.CreatedDate = DateTime.Now;
+                    vm.CreatedDate = result[0].GetProperty<DateTime>("CreationTime");
                     vm.ReplicationState = result[0].GetEnum<ReplicationState>("ReplicationState");
 
                     if (extendedInfo)
