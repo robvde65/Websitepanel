@@ -226,7 +226,9 @@ namespace WebsitePanel.EnterpriseServer
 			}
 			catch (Exception ex)
 			{
-                if (ex.Message.Contains("Password doesn't meet complexity"))
+                if (ex.Message.Contains("Password doesn't meet complexity") || 
+                    ex.Message.Contains("IceWarp password policy denies use of this account") ||
+                    ex.Message.Contains("Invalid characters in password"))
 			    {
 			        return BusinessErrorCodes.ERROR_MAIL_ACCOUNT_PASSWORD_NOT_COMPLEXITY;
 			    }

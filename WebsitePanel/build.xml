@@ -59,9 +59,9 @@
 		<ftpUsername></ftpUsername>
 		<ftpPassword></ftpPassword>
 
-	
+
 </PropertyGroup>
-	
+
 	<PropertyGroup Label="WebPlatformFeed">
 		<!-- URI where to locate the installer's distributive online -->
 		<InstallerRemoteUri>http://www.websitepanel.net/files/$(Version)/WebsitePanelInstaller-$(Version)-webpi.msi</InstallerRemoteUri>
@@ -196,7 +196,7 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(PortalBuildFiles)" DestinationFolder="$(PortalBuild)\%(RecursiveDir)" />
 	</Target>
-	
+
 		<Target Name="CreateSchedulerBuild" DependsOnTargets="CreatePortalBuild">
 		<ItemGroup>
 			<SchBuildExclude Include="$(SchedulerServiceSrc)\**\.svn\**" />
@@ -212,7 +212,7 @@
 			<SchedulerServiceBuildFiles Include="$(SchedulerServiceSrc)\**\*.*" Exclude="@(SchBuildExclude)" />
 		</ItemGroup>
 		<Copy SourceFiles="@(SchedulerServiceBuildFiles)" DestinationFolder="$(SchedulerServiceBuild)\%(RecursiveDir)" />
-	</Target>	
+	</Target>
 
 
 	<Target Name="CreateWebDavPortalBuild" DependsOnTargets="CreateSchedulerBuild">
@@ -230,7 +230,7 @@
 			<WebDavPortalBuildFiles Include="$(WebDavPortalSrc)\**\*.*" Exclude="@(WebDavPortalBuildExclude)" />
 		</ItemGroup>
 		<Copy SourceFiles="@(WebDavPortalBuildFiles)" DestinationFolder="$(WebDavPortalBuild)\%(RecursiveDir)" />
-	</Target>	
+	</Target>
 
 	<Target Name="CreateImportCsvBuild" DependsOnTargets="CreateWebDavPortalBuild">
 		<ItemGroup>
@@ -249,7 +249,7 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(HyperVUtilsBuildFiles)" DestinationFolder="$(HyperVUtilsBuild)\%(RecursiveDir)" />
 	</Target>
-  
+
   <Target Name="CreateVMConfigBuild" DependsOnTargets="CreateHyperVUtilsBuild">
 		<ItemGroup>
 			<VMConfigExclude Include="$(VMConfigSrc)\**\*.pdb" Condition="'$(BuildConfiguration)' == 'Release'" />
@@ -258,7 +258,7 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(VMConfigBuildFiles)" DestinationFolder="$(VMConfigBuild)\%(RecursiveDir)" />
 	</Target>
-  
+
 	<Target Name="CreateImportEnterpriseBuild" DependsOnTargets="CreateVMConfigBuild">
 		<ItemGroup>
 			<ImportEnterpriseExclude Include="$(ImportEnterpriseSrc)\**\*.pdb" Condition="'$(BuildConfiguration)' == 'Release'" />
@@ -307,47 +307,47 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(WSPTransportAgentBuildFiles)" DestinationFolder="$(WSPTransportAgentBuild)\%(RecursiveDir)" />
 	</Target>
-	
+
 	<Target Name="CreateLocalizationToolkitBuild" DependsOnTargets="CreateWSPTransportAgentBuild">
 		<!-- compile toolkit -->
 		<MSBuild Projects="$(TrunkFolder)\Sources\Tools\WebsitePanel.LocalizationToolkit\WebsitePanel.LocalizationToolkit.csproj" Properties="Configuration=$(BuildConfiguration)">
 			<Output
                 TaskParameter="TargetOutputs"
-                ItemName="LocalizationToolkitExe" />		
+                ItemName="LocalizationToolkitExe" />
 		</MSBuild>
-		
+
 		<!-- generate default resources -->
 		<Exec Command="@(LocalizationToolkitExe) -L $(PortalSrc)"/>
-		
+
 		<!-- build MSI package -->
 		<MSBuild Projects="$(TrunkFolder)\Sources\Tools\WebsitePanel.LocalizationToolkit.Wix\WebsitePanel.LocalizationToolkit.Wix.wixproj" Properties="Configuration=$(BuildConfiguration);DefineSolutionProperties=false">
 			<Output
                 TaskParameter="TargetOutputs"
-                ItemName="LocalizationToolkitMsi" />	
+                ItemName="LocalizationToolkitMsi" />
 		</MSBuild>
 		<Copy SourceFiles="@(LocalizationToolkitMsi)" DestinationFolder="$(LocalizationToolkitBuild)\%(RecursiveDir)" />
 	</Target>
-	
+
 	<Target Name="CreateSetupBuild" DependsOnTargets="CreateLocalizationToolkitBuild">
-	
+
 		<PropertyGroup>
 			<InstallerProjectRoot>$(RootFolder)\WebsitePanel.Installer\Sources\WebsitePanel.Installer</InstallerProjectRoot>
 			<InstallerProjectBin>$(InstallerProjectRoot)\bin\$(BuildConfiguration)</InstallerProjectBin>
 		</PropertyGroup>
-		
+
 		<!-- compile Installer -->
 		<MSBuild Projects="$(InstallerProjectRoot)\WebsitePanel.Installer.csproj" Properties="Configuration=$(BuildConfiguration)" />
-		
+
 		<!-- copy installer binaries for upgrade -->
 		<ItemGroup>
 			<InstallerBinaries Include="$(InstallerProjectBin)\*.dll" />
 			<InstallerBinaries Include="$(InstallerProjectBin)\*.exe" />
 		</ItemGroup>
 		<Copy SourceFiles="@(InstallerBinaries)" DestinationFolder="$(InstallerBuild)\%(RecursiveDir)" />
-		
+
 		<!-- Compile updater.exe -->
 		<MSBuild Projects="$(RootFolder)\WebsitePanel.Installer\Sources\WebsitePanel.Updater\WebsitePanel.Updater.csproj" Properties="Configuration=$(BuildConfiguration)" />
-    
+
 		<!-- build MSI package -->
 
 	</Target>
@@ -360,7 +360,7 @@
     </ItemGroup>
     <Copy SourceFiles="@(FixDefaultPublicFolderMailboxBuildFiles)" DestinationFolder="$(FixDefaultPublicFolderMailboxBuild)\%(RecursiveDir)" />
   </Target>
-    
+
     <Target Name="WiXCreateRedistFileListBuild" DependsOnTargets="CreateFixDefaultPublicFolderMailboxBuild" >
         <RemoveDir Directories="$(WiXInstallerBuild)\ComponentsFiles" />
         <MakeDir Directories="$(WiXInstallerBuild)\ComponentsFiles" />
@@ -373,23 +373,23 @@
 		<MSBuild Projects="$(RootFolder)\WebsitePanel.Installer\Sources\Setup.WIX\Setup.Wix.wixproj" Properties="Configuration=$(BuildConfiguration);DefineSolutionProperties=false">
 			<Output
                 TaskParameter="TargetOutputs"
-                ItemName="WebsitePanelInstallerMsi" />	
-		</MSBuild>		
-		
+                ItemName="WebsitePanelInstallerMsi" />
+		</MSBuild>
+
 		<MSBuild Projects="$(RootFolder)\WebsitePanel.Installer\Sources\WebsitePanel.SchedulerServiceInstaller\WebsitePanel.SchedulerServiceInstaller.csproj" Properties="Configuration=$(BuildConfiguration);DefineSolutionProperties=false"/>
 
 		<MSBuild Projects="$(RootFolder)\WebsitePanel.Installer\Sources\Setup.SchedulerService\Setup.SchedulerService.wixproj" Properties="Configuration=$(BuildConfiguration);DefineSolutionProperties=false">
 			<Output
                 TaskParameter="TargetOutputs"
-                ItemName="WebsitePanelInstallerMsi" />	
+                ItemName="WebsitePanelInstallerMsi" />
 		</MSBuild>
-		<Copy SourceFiles="@(WebsitePanelInstallerMsi)" DestinationFolder="$(DeployFolder)\%(RecursiveDir)" />    
+		<Copy SourceFiles="@(WebsitePanelInstallerMsi)" DestinationFolder="$(DeployFolder)\%(RecursiveDir)" />
 		</Target>
-		
+
     <Target Name="Build" DependsOnTargets="WiXCreateRedistFileListBuild">
 		<!-- Do nothing -->
 	</Target>
-    
+
   <!-- Create full distributives -->
 	<PropertyGroup>
 		<InstallFolder>$(DeployFolder)\Install</InstallFolder>
@@ -443,8 +443,8 @@
 		<MakeDir Directories="$(EnterpriseServerInstall)"/>
 		<Copy SourceFiles="@(EnterpriseServerDeployFiles)" DestinationFolder="$(EnterpriseServerInstall)\%(RecursiveDir)" />
 		<XmlUpdate XmlFileName="$(EnterpriseServerInstall)\web.config" Xpath="//configuration/connectionStrings/add/@connectionString" Value="${installer.connectionstring}"  />
-		<XmlUpdate XmlFileName="$(EnterpriseServerInstall)\web.config" Xpath="//configuration/appSettings/add[@key=%22WebsitePanel.CryptoKey%22]/@value" Value="${installer.cryptokey}"  />		
-	</Target>	
+		<XmlUpdate XmlFileName="$(EnterpriseServerInstall)\web.config" Xpath="//configuration/appSettings/add[@key=%22WebsitePanel.CryptoKey%22]/@value" Value="${installer.cryptokey}"  />
+	</Target>
 
 	<Target Name="CreatePortalInstall" DependsOnTargets="CreateEnterpriseServerInstall">
 		<ItemGroup>
@@ -474,7 +474,7 @@
 		<Copy SourceFiles="@(ImportCsvDeployFiles)" DestinationFolder="$(ImportCsvInstall)\%(RecursiveDir)" />
 		<Copy SourceFiles="$(RootFolder)\LICENSE.txt" DestinationFolder="$(ImportCsvInstall)" />
 	</Target>
-  
+
   <Target Name="CreateHyperVUtilsCsvInstall" DependsOnTargets="CreateImportCsvInstall">
 		<ItemGroup>
 			<HyperVUtilsDeployFiles Include="$(HyperVUtilsBuild)\**\*.*" />
@@ -484,7 +484,7 @@
 		<Copy SourceFiles="@(HyperVUtilsDeployFiles)" DestinationFolder="$(HyperVUtilsInstall)\%(RecursiveDir)" />
 		<Copy SourceFiles="$(RootFolder)\LICENSE.txt" DestinationFolder="$(HyperVUtilsInstall)" />
 	</Target>
-  
+
   <Target Name="CreateVMConfigInstall" DependsOnTargets="CreateHyperVUtilsCsvInstall">
 		<ItemGroup>
 			<VMConfigDeployFiles Include="$(VMConfigBuild)\**\*.*" />
@@ -504,7 +504,7 @@
 		<Copy SourceFiles="@(ImportEnterpriseDeployFiles)" DestinationFolder="$(ImportEnterpriseInstall)\%(RecursiveDir)" />
 		<Copy SourceFiles="$(RootFolder)\LICENSE.txt" DestinationFolder="$(ImportEnterpriseInstall)" />
 	</Target>
-	
+
 	<Target Name="CreateWSPTransportAgentInstall" DependsOnTargets="CreateImportEnterpriseInstall">
 		<ItemGroup>
 			<WSPTransportAgentDeployFiles Include="$(WSPTransportAgentBuild)\**\*.*" />
@@ -524,7 +524,7 @@
 		<Copy SourceFiles="@(AWStatsViewerDeployFiles)" DestinationFolder="$(AWStatsViewerInstall)\%(RecursiveDir)" />
 		<Copy SourceFiles="$(RootFolder)\LICENSE.txt" DestinationFolder="$(AWStatsViewerInstall)" />
 	</Target>
-	
+
 	<Target Name="CreateLocalizationToolkitInstall" DependsOnTargets="CreateAWStatsViewerInstall">
 		<ItemGroup>
 			<LocalizationToolkitDeployFiles Include="$(LocalizationToolkitBuild)\**\*.*" />
@@ -562,7 +562,7 @@
 		<MakeDir Directories="$(EnterpriseServerUpdate)"/>
 
 		<RemoveDir Directories="$(PortalUpdate)"/>
-		<MakeDir Directories="$(PortalUpdate)"/>	
+		<MakeDir Directories="$(PortalUpdate)"/>
 	</Target>
 
 	<Target Name="CreateServerUpdate" DependsOnTargets="PrepareUpdates">
@@ -590,7 +590,7 @@
 	<PropertyGroup>
 		<DatabaseFolder>$(DeployFolder)\Database</DatabaseFolder>
 	</PropertyGroup>
-  
+
   <Target Name="CreateEnterpriseServerDatabase" DependsOnTargets="CreatePortalUpdate">
 		<MakeDir Directories="$(DatabaseFolder)"/>
 
@@ -608,7 +608,7 @@
 
 		<Exec Command="$(SqlCmd) -i $(DatabaseFolder)\install_db.sql" />
 		<Exec Command="$(SqlCmd) -i $(DatabaseFolder)\update_db.sql" />
-		
+
 		<Delete Files="$(DatabaseFolder)\install_db.sql" />
 		<Delete Files="$(DatabaseFolder)\update_db.sql" />
 	</Target>
@@ -617,12 +617,14 @@
 		<ConvertToAbsolutePath Paths="$(DatabaseFolder)">
 			<Output TaskParameter="AbsolutePaths" PropertyName="DatabaseFolderAbsolute"/>
 		</ConvertToAbsolutePath>
-		
+
 		<Exec Command="$(MSDeployPath) -verb:sync -source:dbFullSql=&quot;$(MSDeployConnectionString)&quot; -dest:dbFullSql=&quot;$(DatabaseFolderAbsolute)\install_db_temp.sql&quot;"/>
 		<Exec Command="copy $(TrunkFolder)\Resources\database_header.sql+$(DatabaseFolder)\install_db_temp.sql $(DatabaseFolder)\install_db.sql" />
 
 		<MakeDir Directories="$(EnterpriseServerInstall)\Setup"/>
+
 		<Copy SourceFiles="$(DatabaseFolder)\install_db.sql" DestinationFolder="$(EnterpriseServerInstall)\Setup" />
+
 
 		<Delete Files="$(DatabaseFolder)\install_db_temp.sql" />
 	</Target>
@@ -660,7 +662,7 @@
 		<Copy SourceFiles="$(SetupBuildFolder)\setup.dll" DestinationFolder="$(StandaloneInstall)\Setup" />
 		<Copy SourceFiles="$(SetupBuildFolder)\setup.pdb" DestinationFolder="$(StandaloneInstall)\Setup" Condition="'$(BuildConfiguration)' == 'Debug'" />
 	</Target>
-    
+
     <UsingTask TaskName="RegExpReplace" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
         <ParameterGroup>
           <Path ParameterType="System.String" Required="true" />
@@ -693,15 +695,24 @@
         <RegExpReplace Path="$(DatabaseFolder)\wix_update_db.sql" Pattern="USE \[\${install\.database}\]" Replacement="-- WiX" />
         <MSBuild Projects='$(RootFolder)\WebsitePanel.Installer\Sources\WebsitePanel.WIXInstaller\WebsitePanel.WIXInstaller.csproj' Properties='Configuration=$(BuildConfiguration)' Targets='Build' />
         <MSBuild Projects='$(RootFolder)\WebsitePanel.Installer\Sources\Setup.WIXInstaller\Setup.WIXInstaller.wixproj' Properties='Configuration=$(BuildConfiguration)' Targets='Build'>
-           <Output TaskParameter="TargetOutputs" ItemName="StandaloneFullMsi" />	 
-        </MSBuild>    			
+           <Output TaskParameter="TargetOutputs" ItemName="StandaloneFullMsi" />
+        </MSBuild>
 		<Copy SourceFiles="@(StandaloneFullMsi)" DestinationFolder="$(DeployFolder)\%(RecursiveDir)" />
-		
+		<Delete Files="$(RootFolder)\Websitepanel.Installer\Sources\Setup.WIXBootstrapper\Websitepanel.msi"/>
+		<Copy SourceFiles="@(StandaloneFullMsi)" DestinationFolder="$(RootFolder)\Websitepanel.Installer\Sources\Setup.WIXBootstrapper" />
+
 
     </Target>
 
+	<Target Name="CreateStandaloneBootstrapper" DependsOnTargets="CreateStandaloneFullMsi">
+        <MSBuild Projects='$(RootFolder)\WebsitePanel.Installer\Sources\Setup.WIXBootstrapper\Setup.WIXBootstrapper.csproj' Properties='Configuration=$(BuildConfiguration)' Targets='Build'>
+           <Output TaskParameter="TargetOutputs" ItemName="StandaloneBootstrapper" />
+        </MSBuild>
+		<Copy SourceFiles="@(StandaloneBootstrapper)" DestinationFolder="$(DeployFolder)\%(RecursiveDir)" />
+	</Target>
+
 	<!-- Deploy -->
-	<Target Name="Deploy" DependsOnTargets="CreateStandaloneFullMsi" >
+	<Target Name="Deploy" DependsOnTargets="CreateStandaloneBootstrapper" >
 		<ItemGroup>
 			<PortalInstallFiles Include="$(PortalInstall)\**\*.*" />
 			<WebDavPortalInstallFiles Include="$(WebDavPortalInstall)\**\*.*" />
@@ -710,7 +721,7 @@
 
 			<!--
 			<ImportCsvInstallFiles Include="$(ImportCsvInstall)\**\*.*" />
-			<HyperVUtilsInstallFiles Include="$(HyperVUtilsInstall)\**\*.*" />			
+			<HyperVUtilsInstallFiles Include="$(HyperVUtilsInstall)\**\*.*" />
 			<VMConfigInstallFiles Include="$(VMConfigInstall)\**\*.*" />
 			<ImportEnterpriseInstallFiles Include="$(ImportEnterpriseInstall)\**\*.*" />
 			<AWStatsViewerInstallFiles Include="$(AWStatsViewerInstall)\**\*.*" />
@@ -725,7 +736,7 @@
 		<Copy SourceFiles="@(ServerInstallFiles)" DestinationFolder="$(StandaloneInstall)\Server\%(RecursiveDir)" />
 
 
-		<!-- zip full distributives 
+		<!-- zip full distributives
 		<ItemGroup>
 			<StandaloneInstallFiles Include="$(StandaloneInstall)\**\*.*" />
 		</ItemGroup>
@@ -738,7 +749,7 @@
 		<Zip Files="@(ServerInstallFiles)" ZipFileName="$(DeployFolder)\WebsitePanel-Server-$(Version).zip" WorkingDirectory="$(ServerInstall)" />
 		<Zip Files="@(StandaloneInstallFiles)" ZipFileName="$(DeployFolder)\WebsitePanel-StandaloneServerSetup-$(Version).zip" WorkingDirectory="$(StandaloneInstall)" />
 		-->
-		
+
 		<Exec Command="$(ZipCmd) a &quot;$(DeployFolder)\WebsitePanel-Portal-$(Version).zip&quot; &quot;$(PortalInstall)\*&quot;" />
 		<Exec Command="$(ZipCmd) a &quot;$(DeployFolder)\WebsitePanel-Web-Dav-Portal-$(Version).zip&quot; &quot;$(WebDavPortalInstall)\*&quot;" />
 		<Exec Command="$(ZipCmd) a &quot;$(DeployFolder)\WebsitePanel-EnterpriseServer-$(Version).zip&quot; &quot;$(EnterpriseServerInstall)\*&quot;" />
@@ -762,22 +773,22 @@
 		<Zip Files="@(ManualUpdateFiles)" ZipFileName="$(DeployFolder)\Manual-Update.zip" WorkingDirectory="$(UpdateFolder)" />
 		<Zip Files="@(InstallerUpdateFiles)" ZipFileName="$(DeployFolder)\WebsitePanel-Installer-$(Version)-Update.zip" WorkingDirectory="$(InstallerBuild)" />
 		-->
-		
+
 		<Exec Command="$(ZipCmd) a &quot;$(DeployFolder)\WebsitePanel-Portal-$(Version)-Update.zip&quot; &quot;$(PortalUpdate)\*&quot;" />
 		<Exec Command="$(ZipCmd) a &quot;$(DeployFolder)\WebsitePanel-EnterpriseServer-$(Version)-Update.zip&quot; &quot;$(EnterpriseServerUpdate)\*&quot;" />
 		<Exec Command="$(ZipCmd) a &quot;$(DeployFolder)\WebsitePanel-Server-$(Version)-Update.zip&quot; &quot;$(ServerUpdate)\*&quot;" />
 		<Exec Command="$(ZipCmd) a &quot;$(DeployFolder)\Manual-Update.zip&quot; &quot;$(UpdateFolder)\*&quot;" />
 		<Exec Command="$(ZipCmd) a &quot;$(DeployFolder)\WebsitePanel-Installer-$(Version)-Update.zip&quot; &quot;$(InstallerBuild)\*&quot;" />
 
-		<!-- zip tools 
+		<!-- zip tools
 		<Zip Files="@(ImportCsvInstallFiles)" ZipFileName="$(ToolsFolder)\WebsitePanel-Import-CsvBulk-$(Version).zip" WorkingDirectory="$(ImportCsvInstall)" />
 		<Zip Files="@(HyperVUtilsInstallFiles)" ZipFileName="$(ToolsFolder)\WebsitePanel-HyperVUtils-$(Version).zip" WorkingDirectory="$(HyperVUtilsInstall)" />
-		<Zip Files="@(VMConfigInstallFiles)" ZipFileName="$(ToolsFolder)\WebsitePanel-VMConfig-$(Version).zip" WorkingDirectory="$(VMConfigInstall)" />    
+		<Zip Files="@(VMConfigInstallFiles)" ZipFileName="$(ToolsFolder)\WebsitePanel-VMConfig-$(Version).zip" WorkingDirectory="$(VMConfigInstall)" />
 		<Zip Files="@(ImportEnterpriseInstallFiles)" ZipFileName="$(ToolsFolder)\WebsitePanel-Import-Enterprise-$(Version).zip" WorkingDirectory="$(ImportEnterpriseInstall)" />
 		<Zip Files="@(AWStatsViewerInstallFiles)" ZipFileName="$(ToolsFolder)\WebsitePanel-AWStatsViewer-$(Version).zip" WorkingDirectory="$(AWStatsViewerInstall)" />
 		<Zip Files="@(WSPTransportAgentInstallFiles)" ZipFileName="$(ToolsFolder)\WebsitePanel-WSPTransportAgent-$(Version).zip" WorkingDirectory="$(WSPTransportAgentInstall)" />
 		-->
-		
+
 		<Exec Command="$(ZipCmd) a &quot;$(ToolsFolder)\WebsitePanel-Import-CsvBulk-$(Version).zip&quot; &quot;$(ImportCsvInstall)\*&quot;" />
 		<Exec Command="$(ZipCmd) a &quot;$(ToolsFolder)\WebsitePanel-HyperVUtils-$(Version).zip&quot; &quot;$(HyperVUtilsInstall)\*&quot;" />
 		<Exec Command="$(ZipCmd) a &quot;$(ToolsFolder)\WebsitePanel-VMConfig-$(Version).zip&quot; &quot;$(VMConfigInstall)\*&quot;" />
@@ -879,10 +890,12 @@
 		  <FtpUpload Username="$(ftpUsername)" password="$(ftpPassword)" RemoteUri="ftp://$(ftphost)/WebsitePanel-VMConfig-$(Version).zip" LocalFile="$(ToolsFolder)\WebsitePanel-VMConfig-$(Version).zip" />
 		  <FtpUpload Username="$(ftpUsername)" password="$(ftpPassword)" RemoteUri="ftp://$(ftphost)/Websitepanel-SchedulerService-$(Version).msi" LocalFile="$(DeployFolder)\Websitepanel-SchedulerService.msi" />
           <FtpUpload Username="$(ftpUsername)" password="$(ftpPassword)" RemoteUri="ftp://$(ftphost)/WebsitePanel-Full-$(Version).msi" LocalFile="$(DeployFolder)\Websitepanel.msi" />
+		  <FtpUpload Username="$(ftpUsername)" password="$(ftpPassword)" RemoteUri="ftp://$(ftphost)/WebsitePanelSetup-$(Version).exe" LocalFile="$(DeployFolder)\WebsitePanelSetup.exe" />
 		  <FtpUpload Username="$(ftpUsername)" password="$(ftpPassword)" RemoteUri="ftp://$(ftphost)/Manual-Update-$(Version).zip" LocalFile="$(DeployFolder)\Manual-Update.zip" />
       <FtpUpload Username="$(ftpUsername)" password="$(ftpPassword)" RemoteUri="ftp://$(ftphost)/WebsitePanel-FixDefaultPublicFolderMailbox-$(Version).zip" LocalFile="$(ToolsFolder)\WebsitePanel-FixDefaultPublicFolderMailbox-$(Version).zip" />
+
   </Target>
 
   <Import Project="$(RootFolder)\tools\MSBuildCommunityTasks\MSBuild.Community.Tasks.Targets"/>
-  
+
 </Project>

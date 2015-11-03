@@ -386,9 +386,7 @@ namespace WebsitePanel.EnterpriseServer
             var idn = new IdnMapping();
 
             if (itemType == typeof(DnsZone))
-                items.AddRange(dns.GetZones().Select(z =>
-                    Encoding.UTF8.GetByteCount(z) == z.Length ? // IsASCII
-                    idn.GetUnicode(z) : z ));
+                items.AddRange(dns.GetZones());
 
             return items;
         }

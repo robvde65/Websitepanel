@@ -214,11 +214,11 @@ namespace WebsitePanel.Providers.Mail
                 case IceWarpErrorCode.E_CONFLICT:
                     return "Item already exists";
                 case IceWarpErrorCode.E_INVALID:
-                    return "Invalid charcters in mailbox or alias";
+                    return "Invalid characters in mailbox or alias";
                 case IceWarpErrorCode.E_PASSWORDCHARS:
                     return "Invalid characters in password";
                 case IceWarpErrorCode.E_MIGRATION_IN_PROGRESS:
-                    return "User mgiration in progress";
+                    return "User migration in progress";
                 default:
                     return "";
             }
@@ -984,12 +984,7 @@ namespace WebsitePanel.Providers.Mail
             accountObject.SetProperty("U_Name", mailbox.FullName);
             accountObject.SetProperty("U_AccountDisabled", mailbox.IceWarpAccountState);
             accountObject.SetProperty("U_DomainAdmin", mailbox.IsDomainAdmin);
-
-            if (mailbox.ChangePassword)
-            {
-                accountObject.SetProperty("U_Password", mailbox.Password);
-            }
-
+            accountObject.SetProperty("U_Password", mailbox.Password);
             accountObject.SetProperty("U_MaxBoxSize", mailbox.MaxMailboxSize * 1024);
             accountObject.SetProperty("U_MaxBox", mailbox.MaxMailboxSize > 0 ? "1" : "0");
             accountObject.SetProperty("U_MaxMessageSize", mailbox.MaxMessageSizeMegaByte * 1024);

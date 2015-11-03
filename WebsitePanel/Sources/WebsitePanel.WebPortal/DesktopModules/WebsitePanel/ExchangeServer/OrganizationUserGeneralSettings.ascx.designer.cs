@@ -355,15 +355,6 @@ namespace WebsitePanel.Portal.HostedSolution {
         protected global::System.Web.UI.WebControls.Localize locThumbnailphoto;
         
         /// <summary>
-        /// imgThumbnailphoto control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Image imgThumbnailphoto;
-        
-        /// <summary>
         /// upThumbnailphoto control.
         /// </summary>
         /// <remarks>
@@ -371,6 +362,15 @@ namespace WebsitePanel.Portal.HostedSolution {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.FileUpload upThumbnailphoto;
+        
+        /// <summary>
+        /// imgThumbnailphoto control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Image imgThumbnailphoto;
         
         /// <summary>
         /// btnLoadThumbnailphoto control.

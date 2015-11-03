@@ -40,6 +40,8 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Setup.WIXInstaller", "Setup
 		{3343FFD8-7CCE-451B-95AE-3D97244313A2} = {3343FFD8-7CCE-451B-95AE-3D97244313A2}
 	EndProjectSection
 EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Setup.WIXBootstrapper", "Setup.WIXBootstrapper\Setup.WIXBootstrapper.wixproj", "{682CF831-564E-4222-A0C0-FD02AFA210F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
