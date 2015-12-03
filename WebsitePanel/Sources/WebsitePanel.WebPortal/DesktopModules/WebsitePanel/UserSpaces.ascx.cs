@@ -92,8 +92,11 @@ namespace WebsitePanel.Portal
                     } else {
                         ddlPackageSelect.Visible = true;
                         myPackages = new PackagesHelper().GetMyPackage(int.Parse(Session["currentPackage"].ToString()));
-                        PackagesList.DataSource = myPackages;
-                        PackagesList.DataBind();
+                        if (myPackages.Tables.Count != 0)
+                        {
+                            PackagesList.DataSource = myPackages;
+                            PackagesList.DataBind();
+                        }
                     }
                 }
             }
