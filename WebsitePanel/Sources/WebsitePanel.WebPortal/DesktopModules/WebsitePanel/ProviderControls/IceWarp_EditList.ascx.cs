@@ -50,30 +50,28 @@ namespace WebsitePanel.Portal.ProviderControls
         public void BindItem(MailList item)
         {
             txtDescription.Text = item.Description;
-            if (!String.IsNullOrEmpty(item.ModeratorAddress))
-            {
-                ddlListModerators.SelectedValue = item.ModeratorAddress;
-            }
-            ddlMembersSource.SelectedValue = item.MembersSource.ToString();
+            Utils.SelectListItem(ddlListModerators, item.ModeratorAddress);
+            Utils.SelectListItem(ddlMembersSource, item.MembersSource.ToString());
             mailEditItems.Items = item.Members;
-            ddlFromHeaderAction.SelectedValue = item.FromHeader.ToString();
-            ddlReplyToHeaderAction.SelectedValue = item.ReplyToHeader.ToString();
+            Utils.SelectListItem(ddlFromHeaderAction, item.FromHeader.ToString());
+            Utils.SelectListItem(ddlReplyToHeaderAction, item.ReplyToHeader.ToString());
             txtFromHeaderValue.Text = item.ListFromAddress;
             txtReplyToHeaderValue.Text = item.ListReplyToAddress;
             txtSubjectPrefix.Text = item.SubjectPrefix;
-            ddllblOriginator.SelectedValue = item.Originator.ToString();
-            ddlPostingMode.SelectedValue = item.PostingMode.ToString();
-            ddlPasswordProtection.SelectedValue = item.PasswordProtection.ToString();
+            Utils.SelectListItem(ddllblOriginator, item.Originator.ToString());
+            Utils.SelectListItem(ddlPostingMode, item.PostingMode.ToString());
+            Utils.SelectListItem(ddlPasswordProtection, item.PasswordProtection.ToString());
             txtPassword.Text = item.Password;
-            ddlDefaultRights.SelectedValue = ((int) item.DefaultRights).ToString();
+            Utils.SelectListItem(ddlDefaultRights, ((int) item.DefaultRights).ToString());
             txtMaxMessageSize.Text = item.MaxMessageSize.ToString();
             txtMaxMembers.Text = item.MaxMembers.ToString();
             chkSendToSender.Checked = item.SendToSender;
+            chkSetRecipientToToHeader.Checked = item.SetReceipientsToToHeader;
             chkDigestMailingList.Checked = item.DigestMode;
             txtMaxMessagesPerMinute.Text = item.MaxMessagesPerMinute.ToString();
             chkSendSubscribe.Checked = item.SendSubscribe;
             chkSendUnSubscribe.Checked = item.SendUnsubscribe;
-            ddlConfirmSubscription.SelectedValue = item.ConfirmSubscription.ToString();
+            Utils.SelectListItem(ddlConfirmSubscription, item.ConfirmSubscription.ToString());
             chkCommandInSubject.Checked = item.CommandsInSubject;
             chkEnableSubscribe.Checked = !item.DisableSubscribecommand;
             chkEnableUnsubscribe.Checked = item.AllowUnsubscribe;
@@ -110,6 +108,7 @@ namespace WebsitePanel.Portal.ProviderControls
             item.DefaultRights = (IceWarpListDefaultRights)Enum.Parse(typeof (IceWarpListDefaultRights), ddlDefaultRights.SelectedValue);
             item.MaxMessageSize = Convert.ToInt32(txtMaxMessageSize.Text);
             item.MaxMembers = Convert.ToInt32(txtMaxMembers.Text);
+            item.SetReceipientsToToHeader = chkSetRecipientToToHeader.Checked;
             item.SendToSender = chkSendToSender.Checked;
             item.DigestMode = chkDigestMailingList.Checked;
             item.MaxMessagesPerMinute = Convert.ToInt32(txtMaxMessagesPerMinute.Text);

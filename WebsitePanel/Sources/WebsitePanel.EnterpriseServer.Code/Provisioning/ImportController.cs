@@ -29,6 +29,8 @@
 using System;
 using System.Data;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using WebsitePanel.EnterpriseServer;
 using WebsitePanel.Providers;
 using WebsitePanel.Providers.Web;
@@ -76,6 +78,10 @@ namespace WebsitePanel.EnterpriseServer
                 // load group
                 ResourceGroupInfo group = ServerController.GetResourceGroup(itemType.GroupId);
 
+                // Is it DNS Zones? Then create a IDN Mapping object
+                var isDnsZones = group.GroupName == "DNS";
+                var idn = new IdnMapping();
+
                 // get service id
                 int serviceId = PackageController.GetPackageServiceId(packageId, group.GroupName);
                 if (serviceId == 0)
@@ -97,7 +103,6 @@ namespace WebsitePanel.EnterpriseServer
 
                     foreach (string importableItem in importableItems)
                     {
-
                         // filter items by service
                         bool serviceContains = false;
                         foreach (DataRow dr in dtServiceItems.Rows)
@@ -129,7 +134,17 @@ namespace WebsitePanel.EnterpriseServer
                         }
 
                         if (!serviceContains && !packageContains)
-                            items.Add(importableItem);
+                        {
+                            var itemToImport = importableItem;
+
+                            // For DNS zones the compare has been made using ascii, convert to unicode if necessary to make the list of items easier to read
+                            if (isDnsZones && itemToImport.StartsWith("xn--"))
+                            {
+                                itemToImport = idn.GetUnicode(importableItem);
+                            }
+
+                            items.Add(itemToImport);
+                        }
                     }
 
                 }

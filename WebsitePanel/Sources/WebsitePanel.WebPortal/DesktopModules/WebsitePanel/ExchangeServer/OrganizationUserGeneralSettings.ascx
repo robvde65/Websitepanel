@@ -120,20 +120,35 @@
 					        </table>
                             </td>
                             <td>
-                                <asp:Panel ID="pnlThumbnailphoto" runat="server" HorizontalAlign="Right" Width="200px">
+                                <asp:Panel ID="pnlThumbnailphoto" runat="server" HorizontalAlign="Center" Width="200px">
                                     <div class="FormLabel150">
                                         <asp:Localize ID="locThumbnailphoto" runat="server" meta:resourcekey="locThumbnailphoto" Text="Thumbnail photo:"></asp:Localize>
                                     </div>
+                                    <div id="divUpThumbnailphoto" style="display: none;">
+                                        <asp:FileUpload ID="upThumbnailphoto" ClientIDMode="Static" runat="server" style="width: 190px;"
+                                                                                   onchange="__doPostBack('<%= btnLoadThumbnailphoto.ClientID %>', '')" />
+                                        <br /><br />
+                                    </div>
                                     <asp:Image ID="imgThumbnailphoto" runat="server" />
                                     <br />
-                                    <asp:FileUpload ID="upThumbnailphoto" ClientIDMode="Static" runat="server" Style="display: none;" 
-                                        onchange="__doPostBack('<%= btnLoadThumbnailphoto.ClientID %>', '')" />
-                                    <asp:Button ID="btnLoadThumbnailphoto" runat="server" meta:resourcekey="btnLoadThumbnailphoto" 
-                                        CssClass="CommandButton" Text="Load"
+                                    <asp:Button ID="btnLoadThumbnailphoto" runat="server" meta:resourcekey="btnLoadThumbnailphoto"
+                                        CssClass="CommandButton btnload" Text="Load"
                                         OnClientClick="$('#upThumbnailphoto').click(); return false;" />
-                                    <asp:Button ID="btnClearThumbnailphoto" runat="server" meta:resourcekey="btnClearThumbnailphoto" 
+                                    <asp:Button ID="btnClearThumbnailphoto" runat="server" meta:resourcekey="btnClearThumbnailphoto"
                                         CssClass="CommandButton" Text="Clear" 
                                         OnClick="btnClearThumbnailphoto_Click" />
+
+                                    <!--[if lte IE 9]>
+                                    <script type="text/javascript">
+                                        var agentStr = navigator.userAgent;
+                                        if ((agentStr.indexOf("Trident/5") > -1)||(agentStr.indexOf("Trident/4") > -1)||(agentStr.indexOf("Trident") == -1)){
+                                            $().ready(function () {
+                                                $("#divUpThumbnailphoto").show();
+                                                $(".btnload").hide();
+                                            });
+                                        } 
+                                    </script>
+                                    <![endif]-->
 
                                 </asp:Panel>
                             </td>
