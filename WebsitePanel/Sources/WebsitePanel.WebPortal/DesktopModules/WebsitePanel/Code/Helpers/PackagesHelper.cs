@@ -185,9 +185,14 @@ namespace WebsitePanel.Portal
         public DataSet GetMyPackage(int packageid) {
             DataSet ret = new DataSet();
             DataTable table = ES.Services.Packages.GetRawMyPackages(PanelSecurity.SelectedUserId).Tables[0];
-            if(table.Rows.Count > 0) {
-                DataTable t = table.Select("PackageID = " + packageid).CopyToDataTable();
-                ret.Tables.Add(t);
+            if (table.Rows.Count > 0)
+            {
+                var exists = table.Select("PackageID = " + packageid);
+                if (exists.Length != 0)
+                {
+                    DataTable t = table.Select("PackageID = " + packageid).CopyToDataTable();
+                    ret.Tables.Add(t);
+                }
             }
             return ret;
         }
