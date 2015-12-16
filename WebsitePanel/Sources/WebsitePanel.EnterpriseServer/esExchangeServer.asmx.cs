@@ -201,6 +201,14 @@ namespace WebsitePanel.EnterpriseServer
         }
 
         [WebMethod]
+        public List<ExchangeAccount> SearchAccountsByTypes(int itemId,
+            ExchangeAccountType[] types,
+            string filterColumn, string filterValue, string sortColumn)
+        {
+            return ExchangeServerController.SearchAccountsByTypes(itemId, types, filterColumn, filterValue, sortColumn);
+        }
+
+        [WebMethod]
         public ExchangeAccount GetAccount(int itemId, int accountId)
         {
             return ExchangeServerController.GetAccount(itemId, accountId);

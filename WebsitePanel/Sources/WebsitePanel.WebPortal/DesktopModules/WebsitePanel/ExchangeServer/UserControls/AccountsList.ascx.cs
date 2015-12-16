@@ -80,6 +80,12 @@ namespace WebsitePanel.Portal.ExchangeServer.UserControls
             set { ViewState["SecurityGroupsEnabled"] = value; }
         }
 
+        public bool SharedMailboxEnabled
+        {
+            get { return ViewState["SharedMailboxEnabled"] != null ? (bool)ViewState["SharedMailboxEnabled"] : false; }
+            set { ViewState["SharedMailboxEnabled"] = value; }
+        }
+
 		public int ExcludeAccountId
 		{
 			get { return PanelRequest.AccountID; }
@@ -146,6 +152,9 @@ namespace WebsitePanel.Portal.ExchangeServer.UserControls
                 chkIncludeGroups.Visible = SecurityGroupsEnabled;
                 chkIncludeGroups.Checked = SecurityGroupsEnabled;
 
+                chkIncludeSharedMailbox.Visible = SharedMailboxEnabled;
+                chkIncludeSharedMailbox.Checked = SharedMailboxEnabled;
+
                 gvAccounts.Columns[3].Visible = gvPopupAccounts.Columns[3].Visible = SecurityGroupsEnabled;
 			}
 
@@ -179,8 +188,10 @@ namespace WebsitePanel.Portal.ExchangeServer.UserControls
                 imgName = "room_16.gif";
             else if (accountType == ExchangeAccountType.Equipment)
                 imgName = "equipment_16.gif";
+            else if (accountType == ExchangeAccountType.SharedMailbox)
+                imgName = "shared_16.gif";
 
-			return GetThemedImage("Exchange/" + imgName);
+            return GetThemedImage("Exchange/" + imgName);
 		}
 
         public string GetType(int accountTypeId)
@@ -229,10 +240,19 @@ namespace WebsitePanel.Portal.ExchangeServer.UserControls
 
 		private void BindPopupAccounts()
 		{
-			ExchangeAccount[] accounts = ES.Services.ExchangeServer.SearchAccounts(PanelRequest.ItemID,
-				chkIncludeMailboxes.Checked, chkIncludeContacts.Checked, chkIncludeLists.Checked,
-                chkIncludeRooms.Checked, chkIncludeEquipment.Checked, chkIncludeGroups.Checked,
-				ddlSearchColumn.SelectedValue, txtSearchValue.Text + "%", "");
+            List<ExchangeAccountType> types = new List<ExchangeAccountType>();
+
+            if (chkIncludeMailboxes.Checked) types.Add(ExchangeAccountType.Mailbox);
+            if (chkIncludeContacts.Checked) types.Add(ExchangeAccountType.Contact);
+            if (chkIncludeLists.Checked) types.Add(ExchangeAccountType.DistributionList);
+            if (chkIncludeRooms.Checked) types.Add(ExchangeAccountType.Room);
+            if (chkIncludeEquipment.Checked) types.Add(ExchangeAccountType.Equipment);
+            if (chkIncludeGroups.Checked) types.Add(ExchangeAccountType.SecurityGroup);
+            if (chkIncludeSharedMailbox.Checked) types.Add(ExchangeAccountType.SharedMailbox);
+
+            ExchangeAccount[] accounts = ES.Services.ExchangeServer.SearchAccountsByTypes(PanelRequest.ItemID,
+                types.ToArray(),
+                ddlSearchColumn.SelectedValue, txtSearchValue.Text + "%", "");
 
             if (SecurityGroupsEnabled)
             {
