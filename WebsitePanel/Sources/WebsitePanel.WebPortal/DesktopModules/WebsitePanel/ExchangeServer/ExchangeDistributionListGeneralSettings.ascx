@@ -64,7 +64,8 @@
                                             MailboxesEnabled="true" 
                                             EnableMailboxOnly="true" 
 											ContactsEnabled="true"
-											DistributionListsEnabled="true"  />
+											DistributionListsEnabled="true"
+                                            SharedMailboxEnabled="true"  />
                             </td>
 						</tr>
 					    <tr><td>&nbsp;</td></tr>

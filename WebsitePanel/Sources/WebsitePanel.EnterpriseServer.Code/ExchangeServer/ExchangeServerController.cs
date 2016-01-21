@@ -1160,6 +1160,97 @@ namespace WebsitePanel.EnterpriseServer
             return ObjectUtils.CreateListFromDataReader<ExchangeAccount>(DataProvider.GetExchangeMailboxes(itemId));
         }
 
+        private static List<ExchangeAccount> GetDemoAccounts(bool includeMailboxes, bool includeContacts, bool includeDistributionLists,
+            bool includeRooms, bool includeEquipment, bool includeSecurityGroups)
+        {
+            List<ExchangeAccount> demoAccounts = new List<ExchangeAccount>();
+
+            if (includeMailboxes)
+            {
+                ExchangeAccount m1 = new ExchangeAccount();
+                m1.AccountId = 1;
+                m1.AccountName = "john_fabrikam";
+                m1.AccountType = ExchangeAccountType.Mailbox;
+                m1.DisplayName = "John Smith";
+                m1.PrimaryEmailAddress = "john@fabrikam.net";
+                demoAccounts.Add(m1);
+
+
+
+                ExchangeAccount m3 = new ExchangeAccount();
+                m3.AccountId = 3;
+                m3.AccountName = "marry_fabrikam";
+                m3.AccountType = ExchangeAccountType.Mailbox;
+                m3.DisplayName = "Marry Smith";
+                m3.PrimaryEmailAddress = "marry@fabrikam.net";
+                demoAccounts.Add(m3);
+            }
+
+            if (includeRooms)
+            {
+                ExchangeAccount r1 = new ExchangeAccount();
+                r1.AccountId = 20;
+                r1.AccountName = "room1_fabrikam";
+                r1.AccountType = ExchangeAccountType.Room;
+                r1.DisplayName = "Meeting Room 1";
+                r1.PrimaryEmailAddress = "room1@fabrikam.net";
+                demoAccounts.Add(r1);
+            }
+
+            if (includeEquipment)
+            {
+                ExchangeAccount e1 = new ExchangeAccount();
+                e1.AccountId = 21;
+                e1.AccountName = "projector_fabrikam";
+                e1.AccountType = ExchangeAccountType.Equipment;
+                e1.DisplayName = "Projector 1";
+                e1.PrimaryEmailAddress = "projector@fabrikam.net";
+                demoAccounts.Add(e1);
+            }
+
+            if (includeContacts)
+            {
+                ExchangeAccount c1 = new ExchangeAccount();
+                c1.AccountId = 4;
+                c1.AccountName = "pntr1_fabrikam";
+                c1.AccountType = ExchangeAccountType.Contact;
+                c1.DisplayName = "MSPControl Support";
+                c1.PrimaryEmailAddress = "support@MSPControl.net";
+                demoAccounts.Add(c1);
+
+                ExchangeAccount c2 = new ExchangeAccount();
+                c2.AccountId = 5;
+                c2.AccountName = "acc1_fabrikam";
+                c2.AccountType = ExchangeAccountType.Contact;
+                c2.DisplayName = "John Home Account";
+                c2.PrimaryEmailAddress = "john@yahoo.com";
+                demoAccounts.Add(c2);
+            }
+
+            if (includeDistributionLists)
+            {
+                ExchangeAccount d1 = new ExchangeAccount();
+                d1.AccountId = 6;
+                d1.AccountName = "sales_fabrikam";
+                d1.AccountType = ExchangeAccountType.DistributionList;
+                d1.DisplayName = "Fabrikam Sales Dept";
+                d1.PrimaryEmailAddress = "sales@fabrikam.net";
+                demoAccounts.Add(d1);
+            }
+
+            if (includeSecurityGroups)
+            {
+                ExchangeAccount g1 = new ExchangeAccount();
+                g1.AccountId = 7;
+                g1.AccountName = "group_fabrikam";
+                g1.AccountType = ExchangeAccountType.SecurityGroup;
+                g1.DisplayName = "Fabrikam Sales Dept";
+                demoAccounts.Add(g1);
+            }
+
+            return demoAccounts;
+        }
+
         public static List<ExchangeAccount> SearchAccounts(int itemId,
             bool includeMailboxes, bool includeContacts, bool includeDistributionLists,
             bool includeRooms, bool includeEquipment, bool includeSecurityGroups,
@@ -1167,94 +1258,8 @@ namespace WebsitePanel.EnterpriseServer
         {
             #region Demo Mode
             if (IsDemoMode)
-            {
-                List<ExchangeAccount> demoAccounts = new List<ExchangeAccount>();
-
-                if (includeMailboxes)
-                {
-                    ExchangeAccount m1 = new ExchangeAccount();
-                    m1.AccountId = 1;
-                    m1.AccountName = "john_fabrikam";
-                    m1.AccountType = ExchangeAccountType.Mailbox;
-                    m1.DisplayName = "John Smith";
-                    m1.PrimaryEmailAddress = "john@fabrikam.net";
-                    demoAccounts.Add(m1);
-
-
-
-                    ExchangeAccount m3 = new ExchangeAccount();
-                    m3.AccountId = 3;
-                    m3.AccountName = "marry_fabrikam";
-                    m3.AccountType = ExchangeAccountType.Mailbox;
-                    m3.DisplayName = "Marry Smith";
-                    m3.PrimaryEmailAddress = "marry@fabrikam.net";
-                    demoAccounts.Add(m3);
-                }
-
-                if (includeRooms)
-                {
-                    ExchangeAccount r1 = new ExchangeAccount();
-                    r1.AccountId = 20;
-                    r1.AccountName = "room1_fabrikam";
-                    r1.AccountType = ExchangeAccountType.Room;
-                    r1.DisplayName = "Meeting Room 1";
-                    r1.PrimaryEmailAddress = "room1@fabrikam.net";
-                    demoAccounts.Add(r1);
-                }
-
-                if (includeEquipment)
-                {
-                    ExchangeAccount e1 = new ExchangeAccount();
-                    e1.AccountId = 21;
-                    e1.AccountName = "projector_fabrikam";
-                    e1.AccountType = ExchangeAccountType.Equipment;
-                    e1.DisplayName = "Projector 1";
-                    e1.PrimaryEmailAddress = "projector@fabrikam.net";
-                    demoAccounts.Add(e1);
-                }
-
-                if (includeContacts)
-                {
-                    ExchangeAccount c1 = new ExchangeAccount();
-                    c1.AccountId = 4;
-                    c1.AccountName = "pntr1_fabrikam";
-                    c1.AccountType = ExchangeAccountType.Contact;
-                    c1.DisplayName = "WebsitePanel Support";
-                    c1.PrimaryEmailAddress = "support@websitepanel.net";
-                    demoAccounts.Add(c1);
-
-                    ExchangeAccount c2 = new ExchangeAccount();
-                    c2.AccountId = 5;
-                    c2.AccountName = "acc1_fabrikam";
-                    c2.AccountType = ExchangeAccountType.Contact;
-                    c2.DisplayName = "John Home Account";
-                    c2.PrimaryEmailAddress = "john@yahoo.com";
-                    demoAccounts.Add(c2);
-                }
-
-                if (includeDistributionLists)
-                {
-                    ExchangeAccount d1 = new ExchangeAccount();
-                    d1.AccountId = 6;
-                    d1.AccountName = "sales_fabrikam";
-                    d1.AccountType = ExchangeAccountType.DistributionList;
-                    d1.DisplayName = "Fabrikam Sales Dept";
-                    d1.PrimaryEmailAddress = "sales@fabrikam.net";
-                    demoAccounts.Add(d1);
-                }
-
-                if (includeSecurityGroups)
-                {
-                    ExchangeAccount g1 = new ExchangeAccount();
-                    g1.AccountId = 7;
-                    g1.AccountName = "group_fabrikam";
-                    g1.AccountType = ExchangeAccountType.SecurityGroup;
-                    g1.DisplayName = "Fabrikam Sales Dept";
-                    demoAccounts.Add(g1);
-                }
-
-                return demoAccounts;
-            }
+                return GetDemoAccounts(includeMailboxes, includeContacts, includeDistributionLists,
+                    includeRooms, includeEquipment, includeSecurityGroups);
             #endregion
 
             return ObjectUtils.CreateListFromDataReader<ExchangeAccount>(
@@ -1263,6 +1268,36 @@ namespace WebsitePanel.EnterpriseServer
                 filterColumn, filterValue, sortColumn));
         }
 
+
+
+        public static List<ExchangeAccount> SearchAccountsByTypes(int itemId,
+                    ExchangeAccountType[] types,
+                    string filterColumn, string filterValue, string sortColumn)
+        {
+            if (types.Length == 0)
+                return new List<ExchangeAccount>();
+
+            #region Demo Mode
+            if (IsDemoMode)
+            {
+                List<ExchangeAccountType> list = new List<ExchangeAccountType>(types);
+
+                return GetDemoAccounts(list.Contains(ExchangeAccountType.Mailbox), list.Contains(ExchangeAccountType.Contact), list.Contains(ExchangeAccountType.DistributionList),
+                    list.Contains(ExchangeAccountType.Room), list.Contains(ExchangeAccountType.Equipment), list.Contains(ExchangeAccountType.SecurityGroup));
+            }
+            #endregion
+
+            string accountTypes = "";
+            foreach (ExchangeAccountType type in types)
+            {
+                if (!string.IsNullOrEmpty(accountTypes)) accountTypes += ", ";
+                accountTypes += (int)type;
+            }
+
+            return ObjectUtils.CreateListFromDataReader<ExchangeAccount>(
+                                                              DataProvider.SearchExchangeAccountsByTypes(SecurityContext.User.UserId, itemId,
+                                                              accountTypes, filterColumn, filterValue, sortColumn));
+        }
 
 
         public static ExchangeAccount GetAccount(int itemId, int accountId, bool withLog = true)
